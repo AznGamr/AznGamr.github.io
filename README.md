@@ -1,4 +1,4 @@
-# simple-page
+# simple-pages
 
 link to live site https://azngamr.github.io/simple-page/
 
