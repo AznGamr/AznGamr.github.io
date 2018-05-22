@@ -268,3 +268,16 @@ anychart.onDocumentReady(function () {
 });
 </script>
 </div>
+
+<link href="/mapsvg/index.htmlcss/mapsvg.css" rel="stylesheet">
+<script src="/mapsvg/index.htmljs/jquery.js"></script>
+<script src="/mapsvg/index.htmljs/jquery.mousewheel.min.js"></script>
+<script src="/mapsvg/index.htmljs/mapsvg.min.js"></script>
+
+<div id="mapsvg"></div>
+
+<script type="text/javascript">
+jQuery(document).ready(function(){
+jQuery("#mapsvg").mapSvg({width: 960,height: 540,regions: {'rect2122': {id: "rect2122",'id_no_spaces': "rect2122",disabled: true,data: {}},'path36': {id: "path36",'id_no_spaces': "path36",disabled: true,data: {}},'rect1652': {id: "rect1652",'id_no_spaces': "rect1652",tooltip: "Test",popover: "Testing",data: {}}},viewBox: [0,0,960,540],gauge: {on: false,labels: {low: "low",high: "high"},colors: {lowRGB: {r: 85,g: 0,b: 0,a: 1},highRGB: {r: 238,g: 0,b: 0,a: 1},low: "#550000",high: "#ee0000",diffRGB: {r: 153,g: 0,b: 0,a: 0}},min: 0,max: false},source: "/Objecty Map updated.svg",title: "Objecty Map updated",responsive: true});
+});
+</script>
