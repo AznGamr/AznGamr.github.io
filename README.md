@@ -1,6 +1,6 @@
-# simple-pages
+# simple-page
 
-link to live site https://azngamr.github.io/simple-page/
+link to live site https://azngamr.github.io/
 
 Whatever I type will appear on the public web
 
