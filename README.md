@@ -2,7 +2,7 @@
 
 link to live site https://azngamr.github.io/
 
-Whatever I type will appear on the public webssss
+Whatever I type will appear on the public webster
 
 <div id="anychart-embed-seat-maps-chamber-theater" class="anychart-embed anychart-embed-seat-maps-chamber-theater">
 <script src="https://cdn.anychart.com/releases/8.2.1/js/anychart-base.min.js"></script>
