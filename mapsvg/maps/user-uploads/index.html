@@ -3,8 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title></title>
+    <link href="/mapsvg/css/mapsvg.css" rel="stylesheet">
+<script src="/mapsvg/js/jquery.js"></script>
+<script src="/mapsvg/js/jquery.mousewheel.min.js"></script>
+<script src="/mapsvg/js/mapsvg.min.js"></script>
 </head>
 <body>
+<div id="mapsvg"></div>
 
+<div id="mapsvg"></div>
+
+<script type="text/javascript">
+jQuery(document).ready(function(){
+jQuery("#mapsvg").mapSvg({markerLastID: 2,width: 612,height: 792,viewBox: [0,0,612,792],zoom: {on: true,limit: [0,10],delta: 2,buttons: {on: true,location: "right"},mousewheel: true},scroll: {on: true,limit: true,background: false,spacebar: false},popovers: {mode: "off",on: false,priority: "local",position: "top",centerOn: true},gauge: {on: false,labels: {low: "low",high: "high"},colors: {lowRGB: {r: 85,g: 0,b: 0,a: 1},highRGB: {r: 238,g: 0,b: 0,a: 1},low: "#550000",high: "#ee0000",diffRGB: {r: 153,g: 0,b: 0,a: 0}},min: 0,max: false},source: "/mapsvg/maps/user-uploads/weblayout.svg",title: "Weblayout",markers: [{id: "marker_1",attached: true,isLink: false,tooltip: "Store 1",popover: "This is the first store",data: {},src: "//azngamr.github.io/mapsvg/markers/pin1_red.png",width: 15,height: 24,x: 270.1770304568528,y: 242.73540609137055},{id: "marker_2",attached: true,isLink: false,tooltip: "Store 2",popover: "This is the second store",data: {},src: "//azngamr.github.io/mapsvg/markers/pin1_red.png",width: 15,height: 24,x: 336.4511421319797,y: 248.9486040609137}],responsive: true});
+});
+</script>
 </body>
 </html>
