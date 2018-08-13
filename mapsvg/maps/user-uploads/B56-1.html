@@ -19,7 +19,7 @@ jQuery("#mapsvg").mapSvg({width: 960,height: 540,regions: {'path1004': {id: "pat
                 var data = this.getOptions(false,true);
                 data.afterLoad = after;
                 _this.loadDashboard(data,this.getData().$map.attr('id'));
-            },gauge: {on: false,labels: {low: "low",high: "high"},colors: {lowRGB: {r: 85,g: 0,b: 0,a: 1},highRGB: {r: 238,g: 0,b: 0,a: 1},low: "#550000",high: "#ee0000",diffRGB: {r: 153,g: 0,b: 0,a: 0}},min: 0,max: false},source: "/mapsvg/maps/user-uploads/B56-1 Technology Coordination Package.svg",title: "B56-1 Technology Coordination Package",responsive: true});
+            },zoom: {on: true,limit: [0,10],delta: 2,buttons: {on: true,location: "right"},mousewheel: true},scroll: {on: true,limit: false,background: false,spacebar: false},gauge: {on: false,labels: {low: "low",high: "high"},colors: {lowRGB: {r: 85,g: 0,b: 0,a: 1},highRGB: {r: 238,g: 0,b: 0,a: 1},low: "#550000",high: "#ee0000",diffRGB: {r: 153,g: 0,b: 0,a: 0}},min: 0,max: false},source: "/mapsvg/maps/user-uploads/B56-1 Technology Coordination Package.svg",title: "B56-1 Technology Coordination Package",responsive: true});
 });
 </script>
     
