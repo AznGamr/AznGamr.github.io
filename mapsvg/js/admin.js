@@ -5,7 +5,7 @@
  * http://codecanyon.net/user/RomanCode/portfolio
  */
 
-var mapsvg_version = '2.4.4';
+var mapsvg_version = '2.4.8';
 
 (function( $ ) {
 
@@ -197,8 +197,10 @@ var mapsvg_version = '2.4.4';
                 if(!_data.path){
                     _data.path = window.location.pathname;
                     _data.dep  = '<link href="'+_data.path+'css/mapsvg.css" rel="stylesheet">\n'
+                        +'<link href="'+_data.path+'css/nanoscroller.css" rel="stylesheet">\n'
                         +'<script src="'+_data.path+'js/jquery.js"></script>\n'
                         +'<script src="'+_data.path+'js/jquery.mousewheel.min.js"></script>\n'
+                        +'<script src="'+_data.path+'js/jquery.nanoscroller.min.js"></script>\n'
                         +'<script src="'+_data.path+'js/mapsvg.min.js"></script>';
                 }
 
@@ -280,32 +282,31 @@ var mapsvg_version = '2.4.4';
             //regionForm.find('.mapsvg-region-tooltip').focus();
         },
         resizeDashboard : function(){
-           var w = _data.iframeWindow.width();
-           var top = $('#wpadminbar').height();
-           var left = $(window).width() - _data.iframeWindow.width();
-           var h = $(window).height()-top;
-           $('#mapsvg-admin').css({width: w, height: h, left: left, top : top});
+            var w = $('body').width();
+            var h = $('body').height();
+            $('#mapsvg-admin').css({width: w, height: h, left: 0, top : 0});
             _this.resizeSVGCanvas();
            _this.updateScroll();
         },
         resizeSVGCanvas : function(){
+
             var l = $('#mapsvg-container');
             var v = msvg && msvg.getData().viewBox;
-            if(msvg && v[3]>v[2]){
-                var ratio = v[2]/v[3];
-                var newWidth = ratio * l.height();
-                var per = (newWidth*100)/l.width();
-                //var newPercent = ((100 * v[3]* l.height() ) / v[2]) / l.width();
-                $('#mapsvg').css({'width': per+'%'});
-                //$('#mapsvg').addClass('mapsvg-fit');
 
-                //$('#mapsvg').css({'margin-top':l.height()/2-$('#mapsvg-limiter').height()/2,
-                //    'width': per+'%'
-                //});
+
+            var mapRatio = v[2]/v[3];
+            var containerRatio = l.width() / l.height();
+
+            // if(Math.round(v[3]*msvg.getScale()) >= l.height()){
+            if(mapRatio < containerRatio){
+                var newWidth = mapRatio * l.height();
+                var per = Math.round((newWidth*100)/l.width())-1;
+                msvg.getData().$wrap.css({width: per+'%'});
             }else{
-                $('#mapsvg').css({width: 'auto'});
-                //$('#mapsvg').removeClass('mapsvg-fit');
+                msvg.getData().$wrap.css({width: 'auto'});
             }
+
+
         },
         updateScroll : function(){
             $(".nano").nanoScroller();
@@ -1068,6 +1069,21 @@ var mapsvg_version = '2.4.4';
                             },200);
                         });
 
+                        // new MapSVG.ResizeSensor($('#adminmenuwrap')[0], function(){
+                        //     setTimeout(function(){
+                        //         _this.resizeDashboard();
+                        //     },200);
+                        // });
+                        // new MapSVG.ResizeSensor($('#wpwrap')[0], function(){
+                        //     setTimeout(function(){
+                        //         _this.resizeDashboard();
+                        //     },200);
+                        // });
+                        new MapSVG.ResizeSensor($('#mapsvg')[0], function(){
+                            setTimeout(function(){
+                                _this.resizeDashboard();
+                            },200);
+                        });
                         _this.resizeDashboard();
                         try{ originalAferLoad(msvg) }catch(err){}
                     };
@@ -1093,16 +1109,16 @@ var mapsvg_version = '2.4.4';
                         }
                     };
 
-                    // Append an iFrame to the page.
-                    _data.iframe = $('#stretchIframe');
-                    _data.iframeWindow = $(_data.iframe[0].contentWindow);//iframe.contents().find('body');
-                    _data.iframeWindow.on('resize',function(){
-                        var elem = $(this);
-                        _this.resizeDashboard();
-                    });
-                    $(window).on('resize',function(){
-                        _this.resizeDashboard();
-                    });
+                    // // Append an iFrame to the page.
+                    // _data.iframe = $('#stretchIframe');
+                    // _data.iframeWindow = $(_data.iframe[0].contentWindow);//iframe.contents().find('body');
+                    // _data.iframeWindow.on('resize',function(){
+                    //     var elem = $(this);
+                    //     _this.resizeDashboard();
+                    // });
+                    // $(window).on('resize',function(){
+                    //     _this.resizeDashboard();
+                    // });
                     _this.resizeDashboard();
 
                     return _this;

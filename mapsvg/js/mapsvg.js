@@ -1,5 +1,5 @@
 /**
- * MapSVG 6.4.0 - Interactive Map Plugin
+ * MapSVG 8.0.0 - Interactive Map Plugin
  *
  * Author: Roman S. Stepanov
  * http://codecanyon.net/user/RomanCode/portfolio?ref=RomanCode
@@ -9,6 +9,18 @@
  */
 var MapSVG = {};
 window.MapSVG = MapSVG;
+MapSVG.templatesLoaded = {};
+
+
+// Create Element.remove() function if not exists
+if (!('remove' in Element.prototype)) {
+    Element.prototype.remove = function() {
+        if (this.parentNode) {
+            this.parentNode.removeChild(this);
+        }
+    };
+}
+
 Math.hypot = Math.hypot || function() {
         var y = 0;
         var length = arguments.length;
@@ -28,6 +40,93 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
 (function($, window, MapSVG, Math){
 
+
+    MapSVG.ResizeSensor = function(element, callback) {
+
+        var _this = this;
+
+        _this.element       = element;
+        _this.callback      = callback;
+
+        var  zIndex = parseInt(getComputedStyle(element));
+        if(isNaN(zIndex)) { zIndex = 0; };
+        zIndex--;
+
+        _this.expand = document.createElement('div');
+        _this.expand.style.position = "absolute";
+        _this.expand.style.left = "0px";
+        _this.expand.style.top = "0px";
+        _this.expand.style.right = "0px";
+        _this.expand.style.bottom = "0px";
+        _this.expand.style.overflow = "hidden";
+        _this.expand.style.zIndex = zIndex;
+        _this.expand.style.visibility = "hidden";
+
+        var  expandChild = document.createElement('div');
+        expandChild.style.position = "absolute";
+        expandChild.style.left = "0px";
+        expandChild.style.top = "0px";
+        expandChild.style.width = "10000000px";
+        expandChild.style.height = "10000000px";
+        _this.expand.appendChild(expandChild);
+
+        _this.shrink = document.createElement('div');
+        _this.shrink.style.position = "absolute";
+        _this.shrink.style.left = "0px";
+        _this.shrink.style.top = "0px";
+        _this.shrink.style.right = "0px";
+        _this.shrink.style.bottom = "0px";
+        _this.shrink.style.overflow = "hidden";
+        _this.shrink.style.zIndex = zIndex;
+        _this.shrink.style.visibility = "hidden";
+
+        var  shrinkChild           = document.createElement('div');
+        shrinkChild.style.position = "absolute";
+        shrinkChild.style.left     = "0px";
+        shrinkChild.style.top      = "0px";
+        shrinkChild.style.width    = "200%";
+        shrinkChild.style.height   = "200%";
+        _this.shrink.appendChild(shrinkChild);
+
+        _this.element.appendChild(_this.expand);
+        _this.element.appendChild(_this.shrink);
+
+        var  size = element.getBoundingClientRect();
+
+        _this.currentWidth  = size.width;
+        _this.currentHeight = size.height;
+
+        _this.setScroll();
+
+        _this.expand.addEventListener('scroll', function(){_this.onScroll()});
+        _this.shrink.addEventListener('scroll', function(){_this.onScroll()});
+    };
+    MapSVG.ResizeSensor.prototype.onScroll = function(){
+        var _this = this;
+        var  size = _this.element.getBoundingClientRect();
+
+        var  newWidth = size.width;
+        var  newHeight = size.height;
+
+        if(newWidth != _this.currentWidth || newHeight != _this.currentHeight) {
+            _this.currentWidth = newWidth;
+            _this.currentHeight = newHeight;
+            _this.callback();
+        }
+
+        this.setScroll();
+    };
+    MapSVG.ResizeSensor.prototype.setScroll = function(){
+        this.expand.scrollLeft = 10000000;
+        this.expand.scrollTop  = 10000000;
+        this.shrink.scrollLeft = 10000000;
+        this.shrink.scrollTop  = 10000000;
+    };
+    MapSVG.ResizeSensor.prototype.destroy = function(){
+        this.expand.remove();
+        this.shrink.remove();
+    };
+
     MapSVG.userAgent = navigator.userAgent.toLowerCase();
 
     // Check for iPad/Iphone/Android
@@ -44,10 +143,8 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
     MapSVG.android = MapSVG.userAgent.indexOf("android");
 
-    MapSVG.isPhone = false;
-    if (window.innerWidth * window.devicePixelRatio <= 960 && window.innerHeight * window.devicePixelRatio <= 640) {
-        MapSVG.isPhone = true;
-    }
+    // MapSVG.isPhone = window.matchMedia("only screen and (min-device-width: 320px) and (max-device-width: 812px)").matches;
+    MapSVG.isPhone = window.matchMedia("only screen and (max-width: 812px)").matches;
 
     MapSVG.browser = {};
     MapSVG.browser.ie = MapSVG.userAgent.indexOf("msie") > -1 || MapSVG.userAgent.indexOf("trident") > -1 || MapSVG.userAgent.indexOf("edge") > -1 ? {} : false;
@@ -110,7 +207,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
     MapSVG.safeURL = function(url){
         if(url.indexOf('http://') == 0 || url.indexOf('https://') == 0)
             url = "//"+url.split("://").pop();
-        return url;
+        return url.replace(/^.*\/\/[^\/]+/, '');
     };
 
     MapSVG.convertToText = function(obj) {
@@ -129,7 +226,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             var prop;
             for (prop in obj) {
                 if (obj.hasOwnProperty(prop)){
-                    var key = prop.search(/[^a-zA-Z]+/) === -1 ?  prop : "'"+prop+"'";
+                    var key = prop.search(/[^a-zA-Z]+/) === -1 ?  prop : "'"+prop.replace("'","\\'")+"'";
                     string.push(key + ": " + MapSVG.convertToText(obj[prop]));
                 }
             }
@@ -166,8 +263,9 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         this.template             = options.template;
         this.scrollable           = options.scrollable === undefined ? true : options.scrollable;
         this.withToolbar          = options.withToolbar === undefined ? true : options.withToolbar;
+        this.autoresize           = MapSVG.parseBoolean(options.autoresize);
         this.templates            = {
-            toolbar: Handlebars.compile(this.getToolbarTemplate()),
+            toolbar: this.getToolbarTemplate(),
             main: this.getMainTemplate()
         };
         this.data                 = options.data;
@@ -183,7 +281,14 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         }
         this._init();
     };
-    MapSVG.Controller.prototype.viewDidLoad      = function(){};
+    MapSVG.Controller.prototype.viewDidLoad = function(){
+        var _this = this;
+        _this.updateScroll();
+        if(this.autoresize){
+            _this.adjustHeight();
+            this.resizeSensor.setScroll();
+        }
+    };
     MapSVG.Controller.prototype.viewDidAppear    = function(){};
     MapSVG.Controller.prototype.viewDidDisappear = function(){};
     MapSVG.Controller.prototype._viewDidLoad     = function(){
@@ -192,11 +297,17 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
     };
     MapSVG.Controller.prototype.updateScroll = function(){
         var _this = this;
-        this.contentWrap.nanoScroller({preventPageScrolling: true});
+        this.contentWrap.nanoScroller({preventPageScrolling: true, iOSNativeScrolling: true});
         setTimeout(function(){
-            _this.contentWrap.nanoScroller({preventPageScrolling: true});
+            _this.contentWrap.nanoScroller({preventPageScrolling: true, iOSNativeScrolling: true});
         },300);
     };
+
+    MapSVG.Controller.prototype.adjustHeight = function() {
+        var _this = this;
+        _this.container.height(_this.container.find('.mapsvg-auto-height').outerHeight()+_this.toolbarView.outerHeight());
+    };
+
     MapSVG.Controller.prototype.init = function(){};
 
     MapSVG.Controller.prototype._init = function(){
@@ -212,19 +323,25 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
     };
 
     MapSVG.Controller.prototype.render = function(){
+
         var _this = this;
         this.view    = $('<div />').attr('id','mapsvg-controller-'+this.name).addClass('mapsvg-controller-view');
 
         // Wrap cointainer, includes scrollable container
         this.contentWrap    = $('<div />').addClass('mapsvg-controller-view-wrap');
+        this.contentWrap2    = $('<div />');
 
         // Scrollable container
+        this.contentSizer    = $('<div />').addClass('mapsvg-auto-height');
         this.contentView    = $('<div />').addClass('mapsvg-controller-view-content');
+        this.contentSizer.append(this.contentView);
+
         if(this.scrollable){
             this.contentWrap.addClass('nano');
-            this.contentView.addClass('nano-content');
+            this.contentWrap2.addClass('nano-content');
         }
-        this.contentWrap.append(this.contentView);
+        this.contentWrap.append(this.contentWrap2);
+        this.contentWrap2.append(this.contentSizer);
 
         // Add toolbar if it exists in template file
         if(this.templates.toolbar){
@@ -238,15 +355,13 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         this.container.append(this.view);
         this.container.data('controller', this);
 
-
         if(this.width)
             this.view.css({width: this.width});
         if(this.color)
             this.view.css({'background-color': this.color});
 
+        _this.viewReadyToFill();
         this.redraw();
-
-
 
         setTimeout(function(){
             _this._viewDidLoad();
@@ -255,12 +370,24 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             _this.setEventHandlers();
         },1);
     };
+
+    MapSVG.Controller.prototype.viewReadyToFill = function(){
+        var _this = this;
+        if(_this.autoresize){
+            _this.resizeSensor = new MapSVG.ResizeSensor(this.contentSizer[0], function(){
+                _this.adjustHeight();
+                _this.updateScroll();
+                _this.events['resize'] && _this.events['resize'].call(_this, _this.mapsvg);
+            });
+        }
+    };
+
     MapSVG.Controller.prototype.redraw = function(){
 
-        this.contentView.html( this.templates.main(this.data) );
+        this.contentView.html( this.templates.main );
 
         if(this.templates.toolbar)
-            this.toolbarView.html( this.templates.toolbar(this.data) );
+            this.toolbarView.html( this.templates.toolbar );
 
         this.updateTopShift();
 
@@ -286,6 +413,9 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
     };
     MapSVG.Controller.prototype.destroy = function(){
         this.view.empty().remove();
+        if(this.resizeSensor){
+            this.resizeSensor.destroy();
+        }
     };
 
 
@@ -340,42 +470,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         this.events && this.events['shown'] && this.events['shown'].call(this.view);
 
         if(this.mapsvg.getData().options.filters && this.mapsvg.getData().options.filters.on){
-            _this.formBuilder = new MapSVG.FormBuilder({
-                container: _this.view.find('.mapsvg-directory-filter-wrap'),
-                filtersMode: true,
-                schema: _this.mapsvg.filtersSchema.getSchema(),
-                editMode: false,
-                mapsvg: _this.mapsvg,
-                // mediaUploader: mediaUploader,
-                // data: _dataRecord,
-                admin: _this.admin,
-                events: {
-                    // save: function(data){_this.saveDataObject(data); },
-                    // update:  function(data){ _this.updateDataObject(data); },
-                    // close: function(){ _this.closeFormHandler(); },
-                    // load: function(){_this.updateScroll(); }
-                }
-            });
-            _this.formBuilder.view.on('change','select,input[type="radio"]',function(){
-                var filter = {};
-                var field = $(this).data('parameter-name');
-
-                // if($(this).data('type')){
-                //     filter[field] = {type: $(this).data('type'), value: $(this).val()};
-                // }else{
-                    filter[field] = $(this).val();
-                // }
-
-
-                _this.database.query.setFilters(filter);
-
-                // _this.formBuilder.view.find('select,input[type="radio"]').each(function(index){
-                //     var field = $(this).data('parameter-name');
-                //     var val = $(this).val();
-                //     filters[field] = val;
-                // });
-                _this.database.getAll(filter);
-            });
+            _this.setFilters();
         }
 
         if(this.mapsvg.getData().options.colors.directorySearch){
@@ -386,6 +481,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
     MapSVG.DirectoryController.prototype.setEventHandlers = function(){
 
         var _this = this;
+        var _data = _this.mapsvg.getData();
 
         $(window).on('resize',function(){
             _this.updateTopShift();
@@ -399,18 +495,20 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         });
 
         this.menuBtn.on('click', function(){
-            if(!$(this).hasClass('active')){
-                _this.toggle();
-                $(this).parent().find('div').removeClass('active');
-                $(this).addClass('active');
-            }
+            _this.toggle(true);
+            // if(!$(this).hasClass('active')){
+            //     _this.toggle();
+            //     $(this).parent().find('div').removeClass('active');
+            //     $(this).addClass('active');
+            // }
         });
         this.mapBtn.on('click', function(){
-            if(!$(this).hasClass('active')){
-                _this.toggle();
-                $(this).parent().find('div').removeClass('active');
-                $(this).addClass('active');
-            }
+            _this.toggle(false);
+            // if(!$(this).hasClass('active')){
+            //     _this.toggle();
+            //     $(this).parent().find('div').removeClass('active');
+            //     $(this).addClass('active');
+            // }
         });
 
         this.view.on('click.menu.mapsvg', '.mapsvg-directory-item', function (e) {
@@ -422,6 +520,9 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             var marker;
             var detailsViewObject;
             var eventObject;
+
+            _this.deselectItems();
+            _this.selectItems(objID);
 
 
             if(_this.mapsvg.getData().options.menu.source == 'regions'){
@@ -438,19 +539,19 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 }
             }
 
-
             if(detailsViewObject.marker && detailsViewObject.marker.id)
                 marker = _this.mapsvg.getMarker(detailsViewObject.marker.id);
 
             if(_this.mapsvg.getData().options.actions.directoryItem.click.showDetails){
                 _this.mapsvg.loadDetailsView(detailsViewObject);
+                _this.toggle(false);
             }
             var skipPopover;
 
             if(regions && regions.length > 0) {
 
                 if(_this.mapsvg.getData().options.actions.directoryItem.click.zoom){
-                    _this.mapsvg.zoomTo(regions, 3);
+                    _this.mapsvg.zoomTo(regions, _this.mapsvg.getData().options.actions.directoryItem.click.zoomToLevel);
                 }
 
                 if(regions.length > 1){
@@ -463,11 +564,12 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                     e.clientY = center[1];
 
                     if(_this.mapsvg.getData().options.actions.directoryItem.click.selectRegion){
-                        region.setSelected(true);
+                        //region.setSelected(true);
+                        _this.mapsvg.selectRegion(region, true);
                     }
                     if(_this.mapsvg.getData().options.actions.directoryItem.click.showRegionPopover){
-                        var content = _this.mapsvg.getData().templates.popoverRegion(region.forTemplate());
-                        _this.mapsvg.showPopover(e, content, null, region);
+                        _this.toggle(false);
+                        _this.mapsvg.showPopover(region);
                     }
                     if(_this.mapsvg.getData().options.actions.directoryItem.click.fireRegionOnClick){
                         var events = _this.mapsvg.getData().events;
@@ -481,13 +583,9 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
             }
             if(marker){
-                var center = marker.getCenter();
-                e.clientX = center[0];
-                e.clientY = center[1] - 6;
-
                 if(_this.mapsvg.getData().options.actions.directoryItem.click.showMarkerPopover){
-                    var content = _this.mapsvg.getData().templates.popoverMarker(detailsViewObject);
-                    _this.mapsvg.showPopover(e, content, null, marker);
+                    _this.mapsvg.showPopover(detailsViewObject);
+                    _this.toggle(false);
                 }
                 if(_this.mapsvg.getData().options.actions.directoryItem.click.fireMarkerOnClick){
                     var events = _this.mapsvg.getData().events;
@@ -499,6 +597,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             _this.events['click'] && _this.events['click'].call($(this), e, eventObject, _this.mapsvg);
 
             var actions = _this.mapsvg.getData().options.actions;
+
 
             if(actions.directoryItem.click.goToLink){
                 var linkParts = actions.directoryItem.click.linkField.split('.');
@@ -664,6 +763,53 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         var _this = this;
         var filters = this.toolbarView.find('.mapsvg-directory-filter-wrap');
         this.toolbarView.find('.mapsvg-filter-tag').remove();
+
+        if(!_this.formBuilder && _this.mapsvg.getData().options.filters && _this.mapsvg.getData().options.filters.on){
+            _this.formBuilder = new MapSVG.FormBuilder({
+                container: _this.view.find('.mapsvg-directory-filter-wrap'),
+                filtersMode: true,
+                schema: _this.mapsvg.filtersSchema.getSchema(),
+                editMode: false,
+                mapsvg: _this.mapsvg,
+                // mediaUploader: mediaUploader,
+                // data: _dataRecord,
+                admin: _this.admin,
+                events: {
+                    // save: function(data){_this.saveDataObject(data); },
+                    // update:  function(data){ _this.updateDataObject(data); },
+                    // close: function(){ _this.closeFormHandler(); },
+                    // load: function(){_this.updateScroll(); }
+                }
+            });
+            _this.formBuilder.view.on('change','select,input[type="radio"]',function(){
+                var filter = {};
+                var field = $(this).data('parameter-name');
+
+                // if($(this).data('type')){
+                //     filter[field] = {type: $(this).data('type'), value: $(this).val()};
+                // }else{
+                filter[field] = $(this).val();
+                // }
+
+
+                _this.database.query.setFilters(filter);
+
+                // _this.formBuilder.view.find('select,input[type="radio"]').each(function(index){
+                //     var field = $(this).data('parameter-name');
+                //     var val = $(this).val();
+                //     filters[field] = val;
+                // });
+                _this.database.getAll(filter);
+            });
+            setTimeout(
+                function(){
+                    _this.updateTopShift();
+                    if(this.scrollable)
+                        _this.updateScroll();
+
+                }, 200);
+        }
+
         if(_this.mapsvg.getData().options.filters && _this.mapsvg.getData().options.filters.on || ( _this.database.query.filters && Object.keys(_this.database.query.filters).length > 0)){
 
             for(var field_name in _this.database.query.filters){
@@ -692,10 +838,26 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
     };
 
     MapSVG.DirectoryController.prototype.toggle = function(on){
+        var _this = this;
         if(on){
             this.container.removeClass('closed');
+            this.menuBtn.addClass('active');
+            this.mapBtn.removeClass('active');
         }else{
             this.container.toggleClass('closed');
+            if(this.container.hasClass('closed')){
+                if(MapSVG.isPhone){
+                    _this.mapsvg.getData().$wrap.css('height','auto');
+                    _this.updateScroll();
+                }
+            }else{
+                if(MapSVG.isPhone && this.container.height() < 400){
+                    _this.mapsvg.getData().$wrap.css('height','400px');
+                    _this.updateScroll();
+                }
+            }
+            this.menuBtn.removeClass('active');
+            this.mapBtn.addClass('active');
         }
 
         this.updateTopShift();
@@ -705,7 +867,6 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         this.contentView.append('<div class="mapsvg-pagination-container"></div>');
         this.contentView.find('.mapsvg-pagination-container').html(pager);
     };
-
 
     /*
      * Details View Controller
@@ -717,7 +878,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
     MapSVG.DetailsController.prototype.getToolbarTemplate = function(){
         if(this.withToolbar)
-            return '<div class="mapsvg-details-close"></div>';
+            return '<div class="mapsvg-popover-close mapsvg-details-close"></div>';
         else
             return '';
     };
@@ -726,16 +887,112 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
     };
 
     MapSVG.DetailsController.prototype.viewDidLoad = function(){
-        this.events && this.events['shown'] && this.events['shown'].call(this.view);
+        var _this = this;
+        this.events && this.events['shown'] && this.events['shown'].call(_this, _this.mapsvg);
     };
 
     MapSVG.DetailsController.prototype.setEventHandlers = function(){
         var _this = this;
-        this.view.on('click','.mapsvg-details-close',function(){
+        this.view.on('click touchend','.mapsvg-popover-close',function(){
             _this.destroy();
-            _this.events && _this.events['closed'] && _this.events['closed'].call(_this);
+            _this.events && _this.events['closed'] && _this.events['closed'].call(_this, _this.mapsvg);
         });
-    }
+    };
+
+    /*
+     * Popover View Controller
+     */
+    MapSVG.PopoverController = function(options){
+        options.autoresize = true;
+        MapSVG.Controller.call(this, options);
+        this.point = options.point;
+        this.yShift = options.yShift;
+        this.mapObject = options.mapObject;
+        this.id = this.mapObject.id+'_'+Math.random();
+        this.container.data('popover-id', this.id);
+        var _this = this;
+    };
+    MapSVG.extend(MapSVG.PopoverController, MapSVG.Controller);
+
+
+    MapSVG.PopoverController.prototype.setPoint = function(point){
+        this.point = point;
+    };
+
+    MapSVG.PopoverController.prototype.getToolbarTemplate = function(){
+        if(this.withToolbar)
+            return '<div class="mapsvg-popover-close"></div>';
+        else
+            return '';
+    };
+
+    MapSVG.PopoverController.prototype.init = function(){
+    };
+
+    MapSVG.PopoverController.prototype.viewDidLoad = function(){
+        MapSVG.Controller.prototype.viewDidLoad.call(this);
+        var _this = this;
+        this.adjustPosition();
+        this.container.toggleClass('mapsvg-popover-animate', true);
+        this.container.toggleClass('mapsvg-popover-visible', true);
+        _this.adjustHeight();
+        _this.updateScroll();
+        this.resizeSensor.setScroll();
+        this.events && this.events['shown'] && this.events['shown'].call(_this, _this.mapsvg);
+    };
+    MapSVG.PopoverController.prototype.adjustHeight = function() {
+        var _this = this;
+        _this.container.height(_this.container.find('.mapsvg-auto-height').outerHeight()+_this.toolbarView.outerHeight());
+    };
+    MapSVG.PopoverController.prototype.adjustPosition = function() {
+        var _this = this;
+        var pos   = _this.mapsvg.convertSVGToPixel([_this.point.x, _this.point.y]);
+        pos[1]   -= _this.yShift;
+        _this.container.css({
+            'transform': 'translateX(-50%) translate(' + pos[0] + 'px,' + pos[1]+ 'px)'
+        });
+    };
+
+
+    MapSVG.PopoverController.prototype.setEventHandlers = function(){
+        var _this = this;
+        $('body').off('.popover.mapsvg');
+
+        this.view.on('click touchend','.mapsvg-popover-close',function(){
+            _this.close();
+        });
+
+        $('body').one('mouseup.popover.mapsvg touchend.popover.mapsvg ', function(e){
+            setTimeout(function(){
+                if(_this.mapsvg.getData().isScrolling || $(e.target).closest('.mapsvg-popover').length || $(e.target).hasClass('mapsvg-btn-zoom'))
+                    return;
+                _this.close();
+            },50);
+        });
+    };
+    MapSVG.PopoverController.prototype.close = function(){
+        var _this = this;
+        if((this.container.data('popover-id')!= this.id) || !_this.container.is(':visible'))
+            return;
+        _this.destroy();
+        if(_this.mapObject instanceof MapSVG.Region){
+            _this.mapsvg.deselectRegion(_this.mapObject);
+        }
+
+        _this.events && _this.events['closed'] && _this.events['closed'].call(_this);
+    };
+    MapSVG.PopoverController.prototype.destroy = function() {
+        var _this = this;
+        _this.container.toggleClass('mapsvg-popover-animate', false);
+        _this.container.toggleClass('mapsvg-popover-visible', false);
+        MapSVG.Controller.prototype.destroy.call(this);
+
+    };
+    MapSVG.PopoverController.prototype.show = function(){
+        var _this = this;
+        // _this.container.toggleClass('mapsvg-popover-animate', true);
+        _this.container.toggleClass('mapsvg-popover-visible', true);
+    };
 
 
 })(jQuery, window, MapSVG, Math);
@@ -790,7 +1047,6 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
         if(!(this instanceof Marker)){
             var matrix = this.node[0].getTransformToElement(this.mapsvg.getData().$svg[0]);
-
             var x2 = bbox.x+bbox.width;
             var y2 = bbox.y+bbox.height;
 
@@ -831,7 +1087,8 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         // var y = (this.node[0].getBoundingClientRect().top - yoffset + jQuery('body').scrollTop())/_data.scale   + _data.viewBox[1];
         // var w = this.node[0].getBoundingClientRect().width/_data.scale;
         // var h = this.node[0].getBoundingClientRect().height/_data.scale;
-        var bbox = this.node[0].getBBox();
+        // var bbox = this.node[0].getBBox();
+        var bbox = this.getBBox();
         var sw = this.mapsvg.convertSVGToGeo(bbox.x, (bbox.y + bbox.height));
         var ne = this.mapsvg.convertSVGToGeo((bbox.x + bbox.width), bbox.y);
 
@@ -891,10 +1148,16 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         var h = this.node[0].getBoundingClientRect().height;
         return [x+w/2,y+h/2];
     };
-    MapObject.prototype.getCenterLatLng = function(){
+    MapObject.prototype.getCenterSVG = function(){
+        var _this = this;
+        var c = _this.getBBox();
+        return {x: c[0]+c[2]/2, y: c[1]+c[3]/2};
+    };
+    MapObject.prototype.getCenterLatLng = function(yShift){
+        yShift = yShift ? yShift : 0;
         var bbox = this.node[0].getBBox();
         var x = bbox.x + bbox.width/2;
-        var y = bbox.y + bbox.height/2;
+        var y = bbox.y + bbox.height/2 - yShift;
         var latlng = this.mapsvg.convertSVGToGeo(x,y);
         return {lat: latlng[0], lng: latlng[1]};
     };
@@ -995,17 +1258,23 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         this.title = this.node.attr('title');
 
         this.node[0].setAttribute('class',(this.node.attr('class')||'')+' mapsvg-region');
-        this.svg_style = {fill: this.getComputedStyle('fill')};
+        this.style = {fill: this.getComputedStyle('fill')};
 
-        this.svg_style.stroke = this.getComputedStyle('stroke');
+        this.style.stroke = this.getComputedStyle('stroke') || '';
         // Make stroke-width always the same:
         // if(!MapSVG.browser.ie)// && !MapSVG.browser.firefox)
         //     this.node.css({'vector-effect' : 'non-scaling-stroke'});
         // else{
-            var w = this.getComputedStyle('stroke-width');
-            w = w ? w.replace('px','') : '1';
-            w = w == "1" ? 1.2 : parseFloat(w);
-            this.svg_style['stroke-width'] = w;
+            var w;
+            if(this.node.data('stroke-width')){
+                w = this.node.data('stroke-width');
+            }else{
+                w = this.getComputedStyle('stroke-width');
+                w = w ? w.replace('px','') : '1';
+                w = w == "1" ? 1.2 : parseFloat(w);
+            }
+            this.style['stroke-width'] = w;
+            this.node.data('stroke-width', w);
         // }
 
         var regionOptions  = globalOptions.regions && globalOptions.regions[this.id] ? globalOptions.regions[this.id] : null;
@@ -1036,6 +1305,19 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
     Region.prototype.changed = function(){
         return JSON.stringify(this.getOptions()) != this.initialState;
     };
+    Region.prototype.edit = function(id){
+        this.nodeOriginal = this.node.clone();
+    };
+    Region.prototype.editCommit = function(){
+        this.nodeOriginal = null;
+    };
+    Region.prototype.editCancel = function(){
+        // this.node[0].setAttribute('d', )
+        this.nodeOriginal.appendTo(_this.mapsvg.getData().$svg);
+        this.node = this.nodeOriginal;
+        this.nodeOriginal = null;
+    };
+
     Region.prototype.getOptions = function(forTemplate){
         var globals = this.globalOptions.regions[this.id];
         var o = {
@@ -1076,7 +1358,8 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             data: this.data
         };
         for(var key in this.data){
-            data[key] = this.data[key];
+            if(key!='title' && key!='id')
+                data[key] = this.data[key];
         }
 
         return data;
@@ -1095,8 +1378,38 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             }
         }
     };
+    Region.prototype.setId = function(id){
+        this.id = id;
+        this.node.prop('id', id);
+    };
+    Region.prototype.setTitle = function(title){
+        this.title = title;
+    };
+    Region.prototype.setStyle = function(style){
+        $.extend(true, this.style, style);
+        this.setFill();
+    };
+    Region.prototype.getChoroplethColor = function(){
+        var o = this.globalOptions.gauge;
+        var w = (parseFloat(this.data[this.globalOptions.regionChoroplethField]) - o.min) / o.maxAdjusted;
+
+        return {
+            r: Math.round(o.colors.diffRGB.r * w + o.colors.lowRGB.r),
+            g: Math.round(o.colors.diffRGB.g * w + o.colors.lowRGB.g),
+            b: Math.round(o.colors.diffRGB.b * w + o.colors.lowRGB.b),
+            a: Math.round(o.colors.diffRGB.a * w + o.colors.lowRGB.a)
+        };
+    };
 
     Region.prototype.setFill = function(fill){
+
+        var _this = this;
+
+
+        if(this.globalOptions.colorsIgnore){
+            this.node.css(this.style);
+            return;
+        }
 
         if(fill){
             var regions = {};
@@ -1125,8 +1438,10 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             this.default_attr['fill'] = this.globalOptions.colors.disabled;
         }else if(this.globalOptions.colors.base){
             this.default_attr['fill'] = this.globalOptions.colors.base;
-        }else if(this.svg_style.fill!='none'){
-            this.default_attr['fill'] = this.svg_style.fill ? this.svg_style.fill : this.globalOptions.colors.baseDefault;
+
+        }else if(this.style.fill!='none'){
+            this.default_attr['fill'] = this.style.fill ? this.style.fill : this.globalOptions.colors.baseDefault;
+
         }else{
             this.default_attr['fill'] = 'none';
         }
@@ -1146,10 +1461,10 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         this.node.css('fill',this.default_attr['fill']);
         this.fill = this.default_attr['fill'];
 
-        if(this.svg_style.stroke!='none' && this.globalOptions.colors.stroke != undefined){
+        if(this.style.stroke!='none' && this.globalOptions.colors.stroke != undefined){
             this.node.css('stroke',this.globalOptions.colors.stroke);
         }else{
-            var s = this.svg_style.stroke == undefined ? '' : this.svg_style.stroke;
+            var s = this.style.stroke == undefined ? '' : this.style.stroke;
             this.node.css('stroke', s);
         }
 
@@ -1170,9 +1485,11 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         var statusOptions;
         if(statusOptions = this.globalOptions.regionStatuses && this.globalOptions.regionStatuses[status]){
             this.status = status;
+            this.data.status = status;
             this.setDisabled(statusOptions.disabled, true);
         }else{
             this.status = undefined;
+            this.data.status = undefined;
             this.setDisabled(false, true);
         }
         this.setFill();
@@ -1189,7 +1506,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         if(!asDefault && opts && opts.disabled !== undefined){
             return opts.disabled;
         }else if(
-            this.globalOptions.disableAll || this.svg_style.fill == 'none' || this.id == 'labels' || this.id == 'Labels'
+            this.globalOptions.disableAll || this.style.fill == 'none' || this.id == 'labels' || this.id == 'Labels'
         ){
             return true;
         }else{
@@ -1220,9 +1537,10 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
         var img = $('<img id="'+options.id+'" src="'+options.src+'"/>').css({
             width: options.width+'px',
-            height: options.height+'px',
-            left: -options.width/2+'px',
-            'margin-top': -options.height+'px'
+            height: options.height+'px'
+            // ,
+            // left: -options.width/2+'px',
+            // 'margin-top': -options.height+'px'
         }).addClass('mapsvg-marker');
 
         MapObject.call(this, img);
@@ -1359,7 +1677,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         // pos[1] = pos[1] - (_data.layers.popovers.offset().top - _data.$map.offset().top);
 
         this.node.css({
-            'transform': 'translate('+pos[0]+'px,'+pos[1]+'px)'
+            'transform': 'translate(-50%,-100%) translate('+pos[0]+'px,'+pos[1]+'px)'
         });
 
     };
@@ -1439,6 +1757,10 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         this.objects = [obj];
     };
 
+    MapSVG.MapObject = MapObject;
+    MapSVG.Region = Region;
+    MapSVG.Marker = Marker;
+
     // Get plugin's path
     var scripts       = document.getElementsByTagName('script');
     var myScript      = scripts[scripts.length - 1].src.split('/');
@@ -1471,6 +1793,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         minHeight           : null,
         loadingText         : 'Loading map...',
         //colors              : {base: "#E1F1F1", background: "#eeeeee", hover: "#548eac", selected: "#065A85", stroke: "#7eadc0"},
+        colorsIgnore              : false,
         colors              : {baseDefault: "#000000",
                                background: "#eeeeee",
                                selected: 40,
@@ -1493,7 +1816,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
         scroll              : {on: false, limit: false, background: false, spacebar: false},
         responsive          : true,
         tooltips            : {mode: 'off', on: false, priority: 'local', position: 'bottom-right'},
-        popovers            : {mode: "off", on: false, priority: 'local', position: 'top', centerOn: false},
+        popovers            : {mode: "off", on: false, priority: 'local', position: 'top', centerOn: true, width: 300, maxWidth: 50, maxHeight: 50, resetViewboxOnClose: true, mobileFullscreen: true},
         multiSelect         : false,
         regionStatuses      : {
             '1': {"label": "Enabled", "value": '1', "color": "", "disabled": false},
@@ -1528,6 +1851,103 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
         },
         gauge               : {on: false, labels: {low: "low", high: "high"}, colors: {lowRGB: null, highRGB: null, low: "#550000", high: "#ee0000"}, min: 0, max: 0},
+        filters: {on: false},
+        menu                : {
+            on: false,
+            search: false,
+            customContainer: false,
+            containerId: '',
+            searchPlaceholder: "Search...",
+            searchFallback: false,
+            source: 'database',
+            width: '200px',
+            position: 'left',
+            sortBy: 'id',
+            sortDirection: 'desc',
+            clickActions: {
+                region: 'default',
+                marker: 'default',
+                directoryItem: {
+                    triggerClick: true,
+                    showPopover: false,
+                    showDetails: true
+                }
+            },
+            detailsViewLocation: 'overDirectory',
+            noResultsText: 'No results found'
+        },
+        database: {
+            pagination: {
+                on: true,
+                perpage: 30,
+                next: "Next",
+                prev: "Prev."
+            },
+            table: ''
+        },
+        actions: {
+            region: {
+                click: {
+                    showDetails: false,
+                    showDetailsFor: 'region',
+                    filterDirectory: false,
+                    loadObjects: false,
+                    showPopover: false,
+                    showPopoverFor: 'region',
+                    goToLink: false
+                }
+            },
+            marker: {
+                click: {
+                    showDetails: false,
+                    showPopover: false,
+                    goToLink: false
+                }
+            },
+            directoryItem: {
+                click: {
+                    showDetails: true,
+                    showPopover: false,
+                    goToLink: false,
+                    selectRegion: true,
+                    fireRegionOnClick: true
+                }
+            }
+        },
+        detailsView : {
+            location: 'top', // top || slide || custom
+            containerId: '',
+            width: '100%'
+        },
+        mobileView: {
+            labelMap: 'Map',
+            labelList: 'List'
+        },
+        googleMaps: {
+            on: false,
+            apiKey: '',
+            loaded: false,
+            center: 'auto', // or {lat: 12, lon: 13}
+            type: 'roadmap',
+            minZoom: 1
+        },
+        groups: [],
+        floors: [],
+        layersControl: {
+            on: false,
+            position: 'top-left',
+            label: 'Show on map',
+            expanded: true,
+            maxHeight: '100%'
+        },
+        floorsControl: {
+            on: false,
+            position: 'top-left',
+            label: 'Floors',
+            expanded: false,
+            maxHeight: '100%'
+        },
+        svgFileVersion: 1,
         menu                : {on: false, containerId: "mapsvg-menu-regions", template: function(region){
     return '<li><a href="#' + region.id + '">' + (region.title||region.id) + '</a></li>'
 }},
@@ -1547,6 +1967,261 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
         this.methods = {
             prototypes : {'MapObject': MapObject, 'Region': Region, 'Marker': Marker},
+            setMarkersClickAsLink: function(){
+                this.database.loadSchema().done(function(schema){
+                    if(schema){
+                        schema.forEach(function(field){
+                            if(field.type == 'marker'){
+                                _data.markerIsLink = MapSVG.parseBoolean(field.isLink);
+                                _data.markerUrlField = field.urlField;
+                            }
+                        });
+                    }
+                });
+            },
+            setGroups: function(){
+                _data.groups = _data.options.groups;
+                _data.groups.forEach(function(g){
+                    g.objects.forEach(function(obj){
+                        _data.$svg.find('#'+obj.value).toggle(g.visible);
+                    });
+                });
+            },
+            setLayersControl : function(options){
+                if(options)
+                    $.extend(true, _data.options.layersControl, options);
+                if(_data.options.layersControl.on){
+                    if(!_data.$layersControl){
+                        _data.$layersControl = $('<div class="mapsvg-layers-control"></div>');
+                        _data.$layersControlLabel = $('<div class="mapsvg-layers-label"></div>').appendTo(_data.$layersControl);
+                        _data.$layersControlListWrap = $('<div class="mapsvg-layers-list-wrap"></div>').appendTo(_data.$layersControl);
+                        _data.$layersControlListNano = $('<div class="nano"></div>').appendTo(_data.$layersControlListWrap);
+                        _data.$layersControlList = $('<div class="mapsvg-layers-list nano-content"></div>').appendTo(_data.$layersControlListNano);
+                        _data.$layersControl.appendTo(_data.$map);
+                    }
+                    _data.$layersControlLabel.html(_data.options.layersControl.label);
+                    _data.$layersControlList.empty();
+                    _data.$layersControl.removeClass('mapsvg-top-left mapsvg-top-right mapsvg-bottom-left mapsvg-bottom-right')
+                    _data.$layersControl.addClass('mapsvg-'+_data.options.layersControl.position);
+                    // if(!_data.options.layersControl.expanded && !_data.$layersControl.hasClass('closed')){
+                    //     _data.$layersControl.addClass('closed')
+                    // }
+                    _data.$layersControl.css({'max-height': _data.options.layersControl.maxHeight});
+
+                    _data.options.groups.forEach(function(g){
+                        var item = $('<div class="mapsvg-layers-item" data-group-id="'+g.id+'">' +
+                            '<input type="checkbox" class="ios8-switch ios8-switch-sm" '+(g.visible?'checked':'')+' />' +
+                            '<label>'+g.title+'</label> ' +
+                            '</div>').appendTo(_data.$layersControlList);
+                    });
+                    _data.$layersControlListNano.nanoScroller({preventPageScrolling: true});
+                    _data.$layersControl.off();
+                    _data.$layersControl.on('click','.mapsvg-layers-item', function() {
+                        var id = $(this).data('group-id');
+                        var input = $(this).find('input');
+                        input.prop('checked', !input.prop('checked'));
+                        _data.options.groups.forEach(function(g){
+                           if(g.id == id) g.visible = !g.visible;
+                        });
+                        _this.setGroups();
+                    });
+                    _data.$layersControlLabel.on('click',function(){
+                        _data.$layersControl.toggleClass('closed');
+                    });
+
+                    _data.$layersControl.toggleClass('closed',!_data.options.layersControl.expanded);
+
+                }else{
+                    _data.$layersControl && _data.$layersControl.hide();
+                }
+
+            },
+            setFloorsControl : function(options){
+                if(options)
+                    $.extend(true, _data.options.floorsControl, options);
+                if(_data.options.floorsControl.on){
+                    if(!_data.$floorsControl){
+                        _data.$floorsControl = $('<div class="mapsvg-floors-control"></div>');
+                        _data.$floorsControlLabel = $('<div class="mapsvg-floors-label"></div>').appendTo(_data.$floorsControl);
+                        _data.$floorsControlListWrap = $('<div class="mapsvg-floors-list-wrap"></div>').appendTo(_data.$floorsControl);
+                        _data.$floorsControlListNano = $('<div class="nano"></div>').appendTo(_data.$floorsControlListWrap);
+                        _data.$floorsControlList = $('<div class="mapsvg-floors-list nano-content"></div>').appendTo(_data.$floorsControlListNano);
+                        _data.$floorsControl.appendTo(_data.$map);
+                    }
+                    _data.$floorsControlLabel.html(_data.options.floorsControl.label);
+                    _data.$floorsControlList.empty();
+                    _data.$floorsControl.removeClass('mapsvg-top-left mapsvg-top-right mapsvg-bottom-left mapsvg-bottom-right')
+                    _data.$floorsControl.addClass('mapsvg-'+_data.options.floorsControl.position);
+                    // if(!_data.options.floorsControl.expanded && !_data.$floorsControl.hasClass('closed')){
+                    //     _data.$floorsControl.addClass('closed')
+                    // }
+                    _data.$floorsControl.css({'max-height': _data.options.floorsControl.maxHeight});
+
+                    _data.options.floors.forEach(function(f){
+                        var item = $('<div class="mapsvg-floors-item" data-floor-id="'+f.object_id+'">' +
+                            '<label>'+f.title+'</label> ' +
+                            '</div>').appendTo(_data.$floorsControlList);
+                    });
+                    _data.$floorsControlListNano.nanoScroller({preventPageScrolling: true});
+                    _data.$floorsControl.off();
+                    _data.$floorsControl.on('click','.mapsvg-floors-item', function() {
+                        var id = $(this).data('floor-id');
+                        _this.setFloor(id);
+                    });
+                    _data.$floorsControlLabel.on('click',function(){
+                        _data.$floorsControl.toggleClass('closed');
+                    });
+
+                    _data.$floorsControl.toggleClass('closed',!_data.options.floorsControl.expanded);
+
+                }else{
+                    _data.$floorsControl && _data.$floorsControl.hide();
+                }
+
+            },
+            setFloor: function(id){
+                _data.$floorsControl.find('.mapsvg-floors-item').toggleClass('active',false);
+                _data.$floorsControl.find('[data-floor-id="'+id+'"]').toggleClass('active',true);
+                _data.options.floors.forEach(function(floor){
+                   _data.$svg.find('#'+floor.object_id).hide();
+                });
+                var floor = _data.$svg.find('#'+id);
+                floor.show();
+                floor = new MapObject(floor, _this);
+                var bbox = floor.getBBox();
+                _data._viewBox = bbox;
+                _this.setViewBox(_data._viewBox);
+                _data.zoomLevels = null;
+                _data.zoomLevel = 1;
+                _this.setZoom();
+                floor = null;
+            },
+            getGroupSelectOptions: function(){
+                var id;
+                var optionGroups = [];
+                var options = [];
+                var options2 = [];
+
+                _data.$svg.find('g').each(function(index){
+                    if(id = $(this)[0].getAttribute('id')){
+                        // _data.groups.push(id);
+                        options.push({label: id, value: id});
+                    }
+                });
+                optionGroups.push({title: "SVG Layers / Groups", options: options});
+
+                _data.$svg.find('path,ellipse,circle,polyline,polygon,rectangle,img,text').each(function(index){
+                    if(id = $(this)[0].getAttribute('id')){
+                        // _data.groups.push(id);
+                        options2.push({label: id, value: id});
+                    }
+                });
+                optionGroups.push({title: "Other SVG objects", options: options2});
+
+
+                return optionGroups;
+            },
+            loadDataObjects: function(params){
+                var _this = this;
+                return _this.database.getAll(params);
+            },
+            loadDirectory: function(){
+                var _this = this;
+                if(!_data.editMode){
+                    if(_data.options.menu.on){
+                        _data.controllers.directory.loadItemsToDirectory();
+                        // _data.controllers.directory.toggle(true);
+                    }
+                    if( _data.options.database.pagination.on){
+                        var pager = _this.getPagination();
+                        if(_data.options.menu.on){
+                            _data.controllers.directory.addPagination(pager);
+                        }else{
+                            _data.$map.append(pager);
+                        }
+                    }
+                }
+            },
+            getPagination : function(callback){
+
+                _data.pager && (_data.pager.empty().remove());
+                _data.pager = $('<nav class="mapsvg-pagination"><ul class="pager"><!--<li class="mapsvg-first"><a href="#">First</a></li>--><li class="mapsvg-prev"><a href="#">&larr; Prev. '+_data.options.database.pagination.perpage+'</a></li><li class="mapsvg-next"><a href="#">Next '+_data.options.database.pagination.perpage+' &rarr;</a></li><!--<li class="mapsvg-last"><a href="#">Last</a></li>--></ul></nav>');
+
+                if(_this.database.onFirstPage() && _this.database.onLastPage()){
+                    _data.pager.hide();
+                }else{
+                    _data.pager.find('.mapsvg-prev').removeClass('disabled');
+                    _data.pager.find('.mapsvg-first').removeClass('disabled');
+                    _data.pager.find('.mapsvg-last').removeClass('disabled');
+                    _data.pager.find('.mapsvg-next').removeClass('disabled');
+
+                    _this.database.onLastPage() &&
+                    (_data.pager.find('.mapsvg-next').addClass('disabled') && _data.pager.find('.mapsvg-last').addClass('disabled'));
+
+                    _this.database.onFirstPage() &&
+                    (_data.pager.find('.mapsvg-prev').addClass('disabled') && _data.pager.find('.mapsvg-first').addClass('disabled'));
+                }
+
+                _data.pager.on('click','.mapsvg-next:not(.disabled)',function(e){
+                    e.preventDefault();
+                    if(_this.database.onLastPage())
+                        return;
+                    _this.database.getAll({page: _this.database.page+1}).done(function(){
+                        callback && callback();
+                    });
+                }).on('click','.mapsvg-prev:not(.disabled)',function(e){
+                    e.preventDefault();
+                    if(_this.database.onFirstPage())
+                        return;
+                    _this.database.getAll({page: _this.database.page-1}).done(function(){
+                        callback && callback();
+                    });
+                }).on('click','.mapsvg-first:not(.disabled)',function(e){
+                    e.preventDefault();
+                    if(_this.database.onFirstPage())
+                        return;
+                    _this.database.getAll({page: 1}).done(function(){
+                        callback && callback();
+                    });
+                }).on('click','.mapsvg-last:not(.disabled)',function(e){
+                    e.preventDefault();
+                    if(_this.database.onLastPage())
+                        return;
+                    _this.database.getAll({lastpage: true}).done(function(){
+                        callback && callback();
+                    });
+                });
+
+                return _data.pager;
+            },
+            deleteMarkers: function(){
+                while(_data.markers.length){
+                    _this.markerDelete(_data.markers[0]);
+                }
+            },
+            addDataObjectsAsMarkers: function(){
+
+                var data  = this.database.getLoaded();
+                var _this = this;
+
+                _this.deleteMarkers();
+
+                data && data.forEach(function(obj){
+                    if(obj.marker && !(obj instanceof Marker)){
+                        obj.marker.id = 'marker_'+obj.id;
+                        obj.marker.attached = true;
+                        var marker = _this.markerAdd(obj.marker);
+                        marker && marker.setObject(obj);
+                    }
+                });
+
+            },
+            getCssUrl: function(){
+                return MapSVG.urls.root+'css/mapsvg.css';
+            },
+            isGeo: function(){
+                return _data.mapIsGeo;
+            },
             functionFromString: function(string){
                 var func;
                 var error = false;
@@ -1561,13 +2236,20 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 }catch(err){
                     error = err;
                 }
+
                 if (!error)
                     return func;
                 else
-                    return {error: {line: error.line, text: "MapSVG user function error: (line "+error.line+"): "+error.message}};
+                    return error;//{error: {line: error.line, text: "MapSVG user function error: (line "+error.line+"): "+error.message}};
             },
-            getOptions: function(forTemplate, forWeb){
+            getOptions: function(forTemplate, forWeb, optionsDelta){
+                optionsDelta = optionsDelta || {};
                 var options = $.extend(true, {}, _data.options);
+                // for(var key in optionsDelta){
+                //     options[key] = optionsDelta[key];
+                // }
+                $.extend(true, options, optionsDelta);
+
                 options.viewBox = _data._viewBox;
 
                 delete options.markers;
@@ -1598,6 +2280,108 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 return options;
             },
             // SETTERS
+            on : function(event, callback) {
+                this.lastChangeTime = Date.now();
+                if (!_data.events[event])
+                    _data.events[event] = [];
+                _data.events[event].push(callback);
+            },
+            off : function(event, callback) {
+                _data.events[event] = [];
+            },
+            // trigger : function(event){
+            //     var _this = this;
+            //     if(_data.events[event] && _data.events[event].length)
+            //         _data.events[event].forEach(function(callback){
+            //             callback && callback.call(_this);
+            //         });
+            // },
+            trigger: function(event){
+                _data.eventHandlers && _data.eventHandlers[event] && _data.eventHandlers[event]();
+            },
+
+            setEvents: function(functions){
+                _data.events = _data.events || {};
+
+                for (var i in functions) {
+                    if (typeof functions[i] === 'string') {
+                        var func = functions[i] != "" ? this.functionFromString(functions[i]) : null;
+
+                        if (func && !func.error && !(func instanceof TypeError || func instanceof SyntaxError) )
+                            _data.events[i] = func;
+                        else
+                            _data.events[i] = null;
+                    } else if(typeof functions[i] === 'function') {
+                        _data.events[i] = functions[i];
+                    }
+                }
+
+                $.extend(true, _data.options.events, functions);
+            },
+            setActions : function(options){
+                $.extend(true, _data.options.actions, options);
+            },
+            setDetailsView: function(options){
+                $.extend(true, _data.options.detailsView, options);
+            },
+            setMobileView: function(options){
+                $.extend(true, _data.options.mobileView, options);
+            },
+            deleteDataField: function(name){
+                _data.options.data.forEach(function(obj){
+                    delete obj[name];
+                });
+            },
+            addZeroDataField: function(name){
+                _data.options.data.forEach(function(obj){
+                    obj[name] = '';
+                });
+            },
+            attachDataToRegions: function(){
+                _data.regions.forEach(function(region){
+                    region.objects = [];
+                });
+                _this.database.getLoaded().forEach(function(obj, index){
+                    if(obj.regions && obj.regions.length){
+                        if(typeof obj.regions == 'object'){
+                            obj.regions.forEach(function(region){
+                                var r = _this.getRegion(region.id);
+                                if(r)
+                                    r.objects.push(obj);
+                            });
+                        }
+                    }
+                });
+            },
+            setTemplates: function(templates){
+                var _this = this;
+                _data.templates = _data.templates || {};
+                for (var name in templates){
+                    if(name != undefined){
+                        _data.options.templates[name] = templates[name];
+                        var t = _data.options.templates[name];
+                        if(name == 'directoryItem'){
+                            t = '{{#each items}}<div id="mapsvg-directory-item-{{id}}" class="mapsvg-directory-item" data-object-id="{{id}}">'+t+'</div>{{/each}}';
+                            name = 'directory';
+                        }
+
+                        _data.templates[name] = Handlebars.compile(t);
+                    }
+                }
+            },
+            setRegionStatus : function(region, status){
+                var status = _this.regionsDatabase.getSchemaField('status').optionsDict[status];
+                if(status.disabled)
+                    region.setDisabled(true);
+                else
+                    region.setDisabled(false);
+
+                if(status.color)
+                    region.setFill(status.color);
+                else
+                    region.setFill();
+
+            },
             update : function(options){
                 for (var key in options){
                     if (key == "regions"){
@@ -1623,13 +2407,21 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                         var setter = 'set'+MapSVG.ucfirst(key);
                         if (_this.hasOwnProperty(setter))
                             this[setter](options[key]);
-                        else
+                        else{
                             _data.options[key] = options[key];
+                        }
                     }
                 }
             },
             setTitle: function(title){
                 title && (_data.options.title = title);
+            },
+            setExtension: function(extension){
+                if(extension){
+                    _data.options.extension = extension;
+                }else{
+                    delete _data.options.extension;
+                }
             },
             setDisableLinks: function(on){
                 on = MapSVG.parseBoolean(on);
@@ -1649,8 +2441,17 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             setMouseOut: function(h){_data.options.mouseOut = h || undefined;},
             setBeforeLoad: function(h){_data.options.beforeLoad = h || undefined;},
             setAfterLoad: function(h){_data.options.afterLoad = h || undefined;},
+            setPopoverShown: function(h){_data.options.popoverShown = h || undefined;},
+            on: function(event, handler){
+                _data.eventHandlers = _data.eventHandlers || {};
+                _data.eventHandlers[event] = handler;
+            },
             setMarkerEditHandler : function(handler){
                 _data.markerEditHandler = handler;
+            },
+            setRegionChoroplethField : function(field){
+                _data.options.regionChoroplethField = field;
+                _this.redrawGauge();
             },
             setRegionEditHandler : function(handler){
                 _data.regionEditHandler = handler;
@@ -1662,8 +2463,24 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                     r.setDisabled();
                 });
             },
+            setRegionStatuses : function(_statuses){
+                _data.options.regionStatuses = _statuses;
+                var colors = {};
+                for(var status in _data.options.regionStatuses){
+                    colors[status] = _data.options.regionStatuses[status].color.length ? _data.options.regionStatuses[status].color : undefined;
+                }
+                _this.setColors({status: colors});
+            },
+            setColorsIgnore : function(val){
+                _data.options.colorsIgnore = MapSVG.parseBoolean(val);
+                _this.regionsRedrawColors();
+            },
             setColors : function(colors){
                 $.extend(true, _data.options, {colors:colors});
+
+                if(colors.status)
+                    _data.options.colors.status = colors.status;
+
                 //_data.$map.css({'background': _data.options.colors.background});
                 //if(colors.stroke)
                 //    _data.regions.forEach(function(r){
@@ -1685,10 +2502,8 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             },
             setTooltips : function (options) {
 
-                if (typeof options.mode == "string" && options.mode.indexOf("function") == 0)
-                    options.mode = _this.functionFromString(options.mode);
-
-                _data.options.tooltips.on = _data.options.tooltips.mode!='off';
+                if(options.on !== undefined)
+                    options.on = MapSVG.parseBoolean(options.on);
 
                 $.extend(true, _data.options, {tooltips: options});
 
@@ -1731,7 +2546,23 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                     var m = {x: e.clientX + $(window).scrollLeft(), y: e.clientY + $(window).scrollTop()};
 
                     var tbbox = _data.tooltip.container[0].getBoundingClientRect();
-                    var mbbox = _data.$map[0].getBoundingClientRect();
+                    var mbbox = _data.$wrap[0].getBoundingClientRect();
+                    tbbox = {
+                        top: tbbox.top + $(window).scrollTop(),
+                        bottom: tbbox.bottom + $(window).scrollTop(),
+                        left: tbbox.left + $(window).scrollLeft(),
+                        right: tbbox.right + $(window).scrollLeft(),
+                        width: tbbox.width,
+                        height: tbbox.height
+                    };
+                    mbbox = {
+                        top: mbbox.top + $(window).scrollTop(),
+                        bottom: mbbox.bottom + $(window).scrollTop(),
+                        left: mbbox.left + $(window).scrollLeft(),
+                        right: mbbox.right + $(window).scrollLeft(),
+                        width: mbbox.width,
+                        height: mbbox.height
+                    };
 
                     if(m.x > mbbox.right || m.y > mbbox.bottom || m.x < mbbox.left || m.y < mbbox.top){
                         return;
@@ -1748,6 +2579,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                         }
                     }else{
                     // may be need mirroring
+
                         if(tbbox.bottom < mbbox.top + tbbox.height){
                             _data.tooltip.posShifted.topbottom = 'bottom';
                             _data.tooltip.mirror.top    = m.y;
@@ -1759,6 +2591,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
                     if(_data.tooltip.mirror.right || _data.tooltip.mirror.left){
                     // may be cancel mirroring
+
                         if(_data.tooltip.mirror.left && m.x > _data.tooltip.mirror.left){
                             _data.tooltip.mirror.left  = false;
                             delete _data.tooltip.posShifted.leftright;
@@ -1799,38 +2632,41 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 _data.options.popovers.on = _data.options.popovers.mode!='off';
                 _data.options.popovers.centerOn = MapSVG.parseBoolean(_data.options.popovers.centerOn);
 
-                if(!_data.mapPopover) {
-                    _data.mapPopover = $('<div />').addClass('mapsvg-popover');
-                    _data.mapPopover.closeButton = $('<div class="mapsvg-popover-close"></div>');
-                    _data.mapPopover.contentDiv = $('<div class="mapsvg-popover-content"></div>');
-                    _data.mapPopover.append(_data.mapPopover.contentDiv);
-                    _data.mapPopover.append(_data.mapPopover.closeButton);
-                    _data.mapPopover.css({
-                        width: _data.options.popovers.width + (_data.options.popovers.width == 'auto' ? '' : 'px'),
-                        height: _data.options.popovers.height + (_data.options.popovers.height == 'auto' ? '' : 'px')
-                    });
-                    _data.layers.popovers.append(_data.mapPopover);
+                if(!_data.$popover) {
+                    _data.$popover = $('<div />').addClass('mapsvg-popover');
+                    // _data.$popover.closeButton = $('<div class="mapsvg-popover-close"></div>');
+                    // _data.$popover.contentDiv = $('<div class="mapsvg-popover-content"></div>');
+                    // _data.$popover.append(_data.$popover.contentDiv);
+                    // _data.$popover.append(_data.$popover.closeButton);
+                    _data.layers.popovers.append(_data.$popover);
                 }
-
-                if(_data.options.popovers.mobileFullscreen && MapSVG.isPhone){
-                    $('body').toggleClass('mapsvg-fullscreen-popovers', true);
-                    _data.mapPopover.appendTo('body');
-                }
-
-                _data.mapPopover.closeButton.off();
-                _data.mapPopover.closeButton.on('click touchend', function(e){
-                    _this.hidePopover();
-                    _this.deselectRegion();
-                    // if(_data.events['closed.popover']){
-                    //     _data.events['closed.popover'].call(_data.mapPopover, _this);
-                    // }
+                _data.$popover.css({
+                    width: _data.options.popovers.width + (_data.options.popovers.width == 'auto' ? '' : 'px'),
+                    'max-width': _data.options.popovers.maxWidth + '%',
+                    'max-height': _data.options.popovers.maxHeight*_data.$wrap.outerHeight()/100+'px'
                 });
 
 
+                // if(_data.options.popovers.centerOn && !_data.popoverResizeSensor){
+                //     _data.popoverResizeSensor = new MapSVG.ResizeSensor(_data.$popover[0], function(){
+                //         if(_data.options.popovers.centerOn){
+                //             _this.centerOn();
+                //         }
+                //     });
+                // }
 
-                // $('body').off('.popover.mapsvg', _this.popoverOffHandler);
-                // $('body').on('touchend.popover.mapsvg mouseup.popover.mapsvg', _this.popoverOffHandler);
-
+                if(_data.options.popovers.mobileFullscreen && MapSVG.isPhone){
+                    $('body').toggleClass('mapsvg-fullscreen-popovers', true);
+                    _data.$popover.appendTo('body');
+                }
+                // _data.$popover.closeButton.off();
+                // _data.$popover.closeButton.on('click touchend', function(e){
+                //     _this.hidePopover();
+                //     _this.deselectRegion();
+                //     if(_data.events['closed.popover']){
+                //         _data.events['closed.popover'].call(_data.$popover, _this);
+                //     }
+                // });
             },
             setRegionPrefix : function(prefix){
                 _data.options.regionPrefix = prefix;
@@ -1845,7 +2681,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 _data.viewBoxFull = _data.svgDefault.viewBox;
                 _data.viewBoxFake = _data.viewBox;
                 _data.whRatioFull = _data.viewBoxFull[2] / _data.viewBox[2];
-                _data.$svg[0].setAttribute('viewBox',_data.viewBoxFull);
+                _data.$svg[0].setAttribute('viewBox',_data.viewBoxFull.join(' '));
                 _data.vbstart = 1;
             },
             setViewBox : function(v,skipAdjustments){
@@ -1854,7 +2690,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                     v = v.trim().split(' ');
                 }
                 var d = (v && v.length==4) ? v : _data.svgDefault.viewBox;
-                var isZooming = parseInt(d[2]) != _data.viewBox[2] || parseInt(d[3]) != _data.viewBox[3];
+                var isZooming = parseFloat(d[2]) != _data.viewBox[2] || parseFloat(d[3]) != _data.viewBox[3];
                 _data.viewBox = [parseFloat(d[0]), parseFloat(d[1]), parseFloat(d[2]), parseFloat(d[3])];
                 _data.whRatio = _data.viewBox[2] / _data.viewBox[3];
 
@@ -1900,19 +2736,31 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                     _this.updateSize();
                 }
 
+                isZooming && _this.trigger('zoom');
+
                 return true;
             },
             setViewBoxReal : function(bbox){
-                _data.$svg[0].setAttribute('viewBox',bbox.join(' '));
+                _data.viewBoxFull = bbox;
+                _data.viewBoxFake = bbox;
+                _data.whRatioFull = _data.viewBoxFull[2] / _data.viewBox[2];
+
+                _data.viewBox = bbox;
+                _data.svgDefault.viewBox = _data.viewBox;
+                _data.viewBoxFull = bbox;
+                _data.viewBoxFake = _data.viewBox;
+                _data.whRatioFull = _data.viewBoxFull[2] / _data.viewBox[2];
+                _data.$svg[0].setAttribute('viewBox',_data.viewBoxFull.join(' '));
+
+                _data.scale   = _this.getScale();
+
                 var tx = (-bbox[0])*_data.scale;
                 var ty = (-bbox[1])*_data.scale;
                 _data.$layers.css({
-                    'transform': 'translate('+_data.scroll.tx+'px,'+_data.scroll.ty+'px)'
+                    'transform': 'translate('+tx+'px,'+ty+'px)'
                 });
-
-                // _data.viewBox = bbox;
-                // _data.scale = _this.getScale();
-                // _this.setViewBox(bbox);
+                _data.zoomLevel = 0;
+                _this.setViewBox(bbox);
             },
             setViewBoxByGoogleMapBounds : function(){
 
@@ -1936,20 +2784,20 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
             },
             redraw: function(){
-                _data.$map.css({
-                    width: _data.$map.width(),
-                    height: _data.$map.width() / _data.whRatio
+                _data.$wrap.css({
+                    width: _data.$wrap.width(),
+                    height: _data.$wrap.width() / _data.whRatio
                 });
-                // if(!MapSVG.browser.ie) {
-                //     _data.$map.css({
-                //         width: 'auto',
-                //         height: 'auto'
-                //     });
-                // }else{
-                    _data.$map.css({
+                if(!MapSVG.browser.ie) {
+                    _data.$wrap.css({
+                        width: 'auto',
+                        height: 'auto'
+                    });
+                }else{
+                    _data.$wrap.css({
                         width: 'auto'
                     });
-                // }
+                }
                 _this.updateSize();
             },
             setPadding: function(options){
@@ -1981,15 +2829,15 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 _this.setViewBox();
                 _this.trigger('sizeChange');
             },
-            trigger: function(event){
-                _data.eventHandlers && _data.eventHandlers[event] && _data.eventHandlers[event]();
-            },
+            // trigger: function(event){
+            //     _data.eventHandlers && _data.eventHandlers[event] && _data.eventHandlers[event]();
+            // },
             setSize : function( width, height, responsive ){
 
                 // Convert strings to numbers
                 _data.options.width      = parseFloat(width);
                 _data.options.height     = parseFloat(height);
-                _data.options.responsive = responsive!=null ? MapSVG.parseBoolean(responsive) : _data.options.responsive;
+                _data.options.responsive = responsive!=null && responsive!=undefined  ? MapSVG.parseBoolean(responsive) : _data.options.responsive;
 
                 // Calculate width and height
                 if ((!_data.options.width && !_data.options.height)){
@@ -2024,26 +2872,49 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 on = on!=undefined ? MapSVG.parseBoolean(on) : _data.options.responsive;
                 $(window).off('resize.mapsvg');
 
-                if(on){
-                    // $(window).on('resize.mapsvg', _this.updateSize);
-                    if(!_data.$map.hasClass('mapsvg-responsive')){
-                        _data.$map.addClass('mapsvg-responsive');
-                        _data.$map.css({
-                            'width': 'auto'
-                            // 'height': 'auto'
+                _data.$map.css({
+                    'width': '100%',
+                    // 'height': 'auto'
+                    'height': '0',
+                    'padding-bottom': (_data.viewBox[3]*100/_data.viewBox[2])+'%'
+                });
+                if(MapSVG.browser.ie){
+                    _data.whRatio2 = _data.svgDefault.viewBox[2] / _data.svgDefault.viewBox[3];
+                    _data.$svg.height(_data.$map.outerWidth() / _data.whRatio2);
+                }
+                if(!_data.resizeSensor){
+                    _data.resizeSensor = new MapSVG.ResizeSensor(_data.$map[0], function(){
+
+                        if(MapSVG.browser.ie){
+                            _data.whRatio2 = _data.svgDefault.viewBox[2] / _data.svgDefault.viewBox[3];
+                            _data.$svg.height(_data.$map.outerWidth() / _data.whRatio2);
+                        }
+
+                        if(_data.options.googleMaps.on && _data.googleMaps.map){
+                            var center = _data.googleMaps.map.getCenter();
+                            google.maps.event.trigger(_data.googleMaps.map, 'resize');
+                            _data.googleMaps.map.setCenter(center);
+                            _this.setViewBoxByGoogleMapBounds();
+                        }else{
+                            _this.setViewBox(_data.viewBox);
+                        }
+                        _data.$popover && _data.$popover.css({
+                            'max-height': _data.options.popovers.maxHeight*_data.$wrap.outerHeight()/100+'px'
                         });
-                    }
-                    _data.whRatio = _data.viewBox[2] / _data.viewBox[3];
-                    _data.$map.height(_data.$map.width()  / _data.whRatio);
-                    $(window).on('resize.mapsvg', function(){
-                        _data.$map.height(_data.$map.width() / _data.whRatio);
-                        _this.setViewBox(_data.viewBox);
                         _this.updateSize();
                     });
+                }
+
+                if(on){
+
+                    _data.$wrap.css({
+                        'width': '100%',
+                        'height': 'auto'
+                    });
+
 
                 }else{
-                    _data.$map.removeClass('mapsvg-responsive');
-                    _data.$map.css({
+                    _data.$wrap.css({
                         'width': _data.options.width+'px',
                         'height': _data.options.height+'px'
                     });
@@ -2099,7 +2970,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
                 $.extend(true, _data.options, {zoom: options});
                 //(options.buttons && options.buttons.on) && (options.buttons.on = MapSVG.parseBoolean(options.buttons.on));
-                _data.$scrollpane.off('mousewheel.mapsvg');
+                _data.$map.off('mousewheel.mapsvg');
 
 
                 if(_data.options.zoom.on && _data.options.zoom.mousewheel){
@@ -2124,7 +2995,9 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                         });
                     }
 
-                    _data.$scrollpane.on('mousewheel.mapsvg',function(event, delta, deltaX, deltaY) {
+                    _data.$map.on('mousewheel.mapsvg',function(event, delta, deltaX, deltaY) {
+                        if($(event.target).hasClass('mapsvg-popover') || $(event.target).closest('.mapsvg-popover').length)
+                            return;
                         // zoomTimeDelta = Date.now() - lastZoomTime;
                         // lastZoomTime = Date.now();
                         event.preventDefault();
@@ -2329,6 +3202,222 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                     }
                 }
             },
+            setGoogleMaps : function(options){
+                var _this = this;
+
+                options    = options || _data.options.googleMaps;
+                options.on != undefined && (options.on = MapSVG.parseBoolean(options.on));
+
+                if(!_data.googleMaps){
+                    _data.googleMaps = {loaded: false, initialized: false, map: null};
+                }
+
+                $.extend(true, _data.options, {googleMaps: options});
+
+                if(_data.options.googleMaps.on){
+                    _data.$map.toggleClass('mapsvg-with-google-map', true);
+                    // _this.setResponsive(false);
+                    // if(!_data.googleMaps.loaded){
+                    if(!MapSVG.googleMapsApiLoaded){
+                        _this.loadGoogleMapsAPI(
+                            function(){
+                            _this.setGoogleMaps();
+                            },
+                            function(){
+                              _this.setGoogleMaps({on:false});
+                            }
+                            );
+                    } else {
+                        if(!_data.googleMaps.map){
+                            _data.$googleMaps = $('<div class="mapsvg-layer mapsvg-layer-gm" id="mapsvg-google-maps-'+_this.id+'"></div>').prependTo(_data.$map);
+                            _data.$googleMaps.css({
+                                position: 'absolute',
+                                top:0,
+                                left: 0,
+                                bottom: 0,
+                                right: 0,
+                                'z-index': '0'
+                            });
+                            _data.googleMaps.map = new google.maps.Map(_data.$googleMaps[0], {
+                                mapTypeId: options.type,
+                                fullscreenControl: false,
+                                keyboardShortcuts: false,
+                                mapTypeControl: false,
+                                scaleControl: false,
+                                scrollwheel: false,
+                                streetViewControl: false,
+                                zoomControl: false
+
+                            });
+                            var overlay;
+                            USGSOverlay.prototype = new google.maps.OverlayView();
+
+
+                            /** @constructor */
+                            function USGSOverlay(bounds, map) {
+                                // Initialize all properties.
+                                this.bounds_ = bounds;
+                                this.map_ = map;
+                                this.setMap(map);
+                            }
+                            USGSOverlay.prototype.onAdd = function() {
+
+                                // var div = document.createElement('div');
+                                // div.style.borderStyle = 'none';
+                                // div.style.borderWidth = '0px';
+                                // div.style.position = 'absolute';
+                                // div.style.background = 'rgba(255,0,0,.5)';
+                                //
+                                // this.div_ = div;
+                                // Add the element to the "overlayLayer" pane.
+                                // var panes = this.getPanes();
+                                // panes.overlayLayer.appendChild(div);
+                            };
+
+                            USGSOverlay.prototype.draw = function() {
+                                var overlayProjection = this.getProjection();
+                                var sw  = overlayProjection.fromLatLngToDivPixel(this.bounds_.getSouthWest());
+                                var ne  = overlayProjection.fromLatLngToDivPixel(this.bounds_.getNorthEast());
+                                var sw2 = overlayProjection.fromLatLngToContainerPixel(this.bounds_.getSouthWest());
+                                var ne2 = overlayProjection.fromLatLngToContainerPixel(this.bounds_.getNorthEast());
+                                var scale = (ne2.x - sw2.x)/_data.svgDefault.viewBox[2];
+                                var vb = [
+                                    _data.svgDefault.viewBox[0] - sw2.x/scale,
+                                    _data.svgDefault.viewBox[1] - ne2.y/scale,
+                                    _data.$map.width()/scale,
+                                    _data.$map.outerHeight()/scale
+                                ];
+                                _this.setViewBox(vb);
+                                // var div = this.div_;
+                                // div.style.left   = sw.x + 'px';
+                                // div.style.top    = ne.y + 'px';
+                                // div.style.width  = (ne.x - sw.x) + 'px';
+                                // div.style.height = (sw.y - ne.y) + 'px';
+                            };
+
+                            var southWest = new google.maps.LatLng(_data.geoViewBox.bottomLat, _data.geoViewBox.leftLon);
+                            var northEast = new google.maps.LatLng(_data.geoViewBox.topLat, _data.geoViewBox.rightLon);
+                            var bounds = new google.maps.LatLngBounds(southWest,northEast);
+
+                            _data.googleMaps.overlay = new USGSOverlay(bounds, _data.googleMaps.map);
+
+                            if(!_data.options.googleMaps.center || !_data.options.googleMaps.zoom){
+                                var southWest = new google.maps.LatLng(_data.geoViewBox.bottomLat, _data.geoViewBox.leftLon);
+                                var northEast = new google.maps.LatLng(_data.geoViewBox.topLat, _data.geoViewBox.rightLon);
+                                var bounds = new google.maps.LatLngBounds(southWest,northEast);
+                                _data.googleMaps.map.fitBounds(bounds);
+                            }else{
+                                _data.googleMaps.map.setZoom(_data.options.googleMaps.zoom);
+                                _data.googleMaps.map.setCenter(_data.options.googleMaps.center);
+                            }
+                            _data.options.googleMaps.initialized = true;
+                            _data.googleMaps.map.addListener('idle',function(){
+                                _data.isZooming = false;
+                            });
+                            google.maps.event.addListenerOnce(_data.googleMaps.map, 'idle', function(){
+                                setTimeout(function() {
+                                    _data.$map.addClass('mapsvg-fade-in');
+                                    setTimeout(function() {
+                                        _data.$map.removeClass('mapsvg-google-map-loading');
+                                        _data.$map.removeClass('mapsvg-fade-in');
+                                        _data.googleMaps.overlay.draw();
+                                        if(!_data.options.googleMaps.center || !_data.options.googleMaps.zoom) {
+                                            _data.options.googleMaps.center = _data.googleMaps.map.getCenter().toJSON();
+                                            _data.options.googleMaps.zoom = _data.googleMaps.map.getZoom();
+                                        }
+                                    }, 300);
+                                }, 1);
+                            });
+                            setTimeout(function(){
+                                _data.googleMaps.map.addListener('bounds_changed',function(){
+                                    // _data.googleMaps.overlay.draw();
+                                    setTimeout(function(){
+                                        if (!_data.isScrolling)
+                                            _data.googleMaps.overlay.draw();
+                                            // _this.setViewBoxByGoogleMapBounds();
+                                    },100);
+                                });
+                                // _data.googleMaps.map.addListener('zoom_changed',function(){
+                                //     setTimeout(function(){
+                                //         _this.trigger('zoom');
+                                //     },200);
+                                // });
+
+                                _this.setViewBoxByGoogleMapBounds();
+                            },200);
+
+                        }else{
+                            _data.$map.toggleClass('mapsvg-with-google-map', true);
+                            _data.$googleMaps && _data.$googleMaps.show();
+                            if(options.type){
+                                _data.googleMaps.map.setMapTypeId(options.type);
+                            }
+                        }
+                    }
+                }else{
+                    // TODO: destroy google maps
+                    _data.$map.toggleClass('mapsvg-with-google-map', false);
+                    _data.$googleMaps && _data.$googleMaps.hide();
+                    _data.googleMaps.initialized = false;
+
+                }
+
+            },
+            loadGoogleMapsAPI : function(callback, fail){
+                window.gm_authFailure = function() {
+                    if(MapSVG.GoogleMapBadApiKey){
+                        MapSVG.GoogleMapBadApiKey();
+                    }else{
+                        alert("Google maps API key is incorrect.");
+                    }
+                };
+                _data.googleMapsScript = document.createElement('script');
+                _data.googleMapsScript.onload = function(){
+                    MapSVG.googleMapsApiLoaded = true;
+                    if(typeof callback == 'function')
+                        callback();
+                };
+                _data.googleMapsScript.src = 'https://maps.googleapis.com/maps/api/js?key='+_data.options.googleMaps.apiKey+'&v=3.31';//+'&callback=initMap';
+
+                document.head.appendChild(_data.googleMapsScript);
+            },
+
+            loadDetailsView : function(obj){
+                // var slide = true;
+                var _this = this;
+                _this.popover && _this.popover.close();
+                if(_this.detailsController)
+                    _this.detailsController.destroy();
+
+                _this.detailsController = new MapSVG.DetailsController({
+                    color: _data.options.colors.detailsView,
+                    autoresize: MapSVG.isPhone ? false : _data.options.detailsView.autoresize,
+                    container: _data.$details,
+                    template: obj instanceof Region ?  _data.templates.detailsViewRegion : _data.templates.detailsView,
+                    mapsvg: _this,
+                    data: obj instanceof Region ? obj.forTemplate() : obj,
+                    scrollable: _data.options.detailsView.location != 'custom',
+                    withToolbar: _data.options.detailsView.location != 'custom',
+                    width: _data.options.detailsView.width,
+                    events: {
+                            'shown': function(){
+                                if(_data.events['shown.detailsView']) {
+                                    _data.events['shown.detailsView'].call(_this, _this);
+                                }
+                                _this.trigger('detailsShown');
+                            },
+                            'closed' : function(){
+                            _this.deselectAllRegions();
+                            // _this.controlles.
+                            _data.controllers && _data.controllers.directory && _data.controllers.directory.deselectItems();
+                            if(_data.events['closed.detailsView']){
+                                _data.events['closed.detailsView'].call(_this, _this);
+                            }
+                            _this.trigger('detailsClosed');
+                        }
+                    }
+                });
+            },
             setMenuMarkers : function(options){
                 options = options || _data.options.menuMarkers;
                 options.on != undefined && (options.on = MapSVG.parseBoolean(options.on));
@@ -2353,9 +3442,13 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
                         if(_data.$menuMarkers.children().length===0)
                         // Add links into navigation container
-                            _data.markers.forEach(function (marker, i) {
-                                _data.$menuMarkers.append(_data.options.menuMarkers.template(marker));
+                            _data.markers.sort(function(a,b){
+                                return a.id == b.id ? 0 : +(a.id > b.id) || -1;
                             });
+
+                        _data.markers.forEach(function (marker, i) {
+                            _data.$menuMarkers.append(_data.options.menuMarkers.template(marker));
+                        });
 
                         _data.$menuMarkers.on('click.menuMarkers.mapsvg','a',function(e){
                             e.preventDefault();
@@ -2364,6 +3457,16 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                             var center = marker.getCenter();
                             e = {clientX: center[0], clientY: center[1]};
                             _this.regionClickHandler(e,marker);
+                        }).on('mouseover.menuMarkers.mapsvg','a',function(e){
+                            e.preventDefault();
+                            var markerID = $(this).attr('href').replace('#','');
+                            var marker = _this.getMarker(markerID);
+                            _data.options.mouseOver && _data.options.mouseOver.call(marker, e, _this);
+                        }).on('mouseout.menuMarkers.mapsvg','a',function(e){
+                            e.preventDefault();
+                            var markerID = $(this).attr('href').replace('#','');
+                            var marker = _this.getMarker(markerID);
+                            _data.options.mouseOut && _data.options.mouseOut.call(marker, e, _this);
                         });
                     }
                 }
@@ -2395,7 +3498,8 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             },
             // destroy
             destroy : function(){
-                _data.$map.empty().attr('style','').removeClass('mapsvg mapsvg-responsive');
+                _data.$map.empty().insertBefore(_data.$wrap).attr('style','').removeClass('mapsvg mapsvg-responsive');
+                _data.$wrap.remove();
                 delete instances[_data.$map.attr('id')];
                 return _this;
             },
@@ -2412,7 +3516,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 // var ratio_new = _data.options.width / _data.options.height;
                 // var scale1, scale2;
 
-                // var size = [_data.$map.width(), _data.$map.height()];
+                // var size = [_data.$map.width(), _data.$map.outerHeight()];
 
                 // scale2 = size[0] / _data.viewBox[2];
                 var scale2 = _data.$map.width() / _data.viewBox[2];
@@ -2424,11 +3528,11 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             },
             updateSize : function(){
                 _data.scale = _this.getScale();
-                _this.popoverAdjustPosition();
+                _this.popover && _this.popover.adjustPosition();
                 _this.markersAdjustPosition();
                 _this.mapAdjustStrokes();
                 if(_data.directoryWrap)
-                    _data.directoryWrap.height(_data.$map.height());
+                    _data.directoryWrap.height(_data.$wrap.outerHeight());
             },
             // GET VIEBOX [x,y,width,height]
             getViewBox : function(){
@@ -2446,6 +3550,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
                 _this.setViewBox(_data._viewBox);
                 $(window).trigger('resize');
+                _this.setSize(width,height);
 
                 // _data.whRatio = _data.viewBox[2] / _data.viewBox[3];
                 // if(!_data.options.responsive)
@@ -2477,44 +3582,73 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 return vb;
             },
             viewBoxReset : function(toInitial){
-                if(toInitial){
-                    var v = _data._viewBox || _data.svgDefault.viewBox;
-                    _data.zoomLevel = 0;
-                    _data._scale = 1;
-                    _this.setViewBox(v);
+                if(_data.options.googleMaps.on){
+                    if(!_data.options.googleMaps.center || !_data.options.googleMaps.zoom){
+                        var southWest = new google.maps.LatLng(_data.geoViewBox.bottomLat, _data.geoViewBox.leftLon);
+                        var northEast = new google.maps.LatLng(_data.geoViewBox.topLat, _data.geoViewBox.rightLon);
+                        var bounds = new google.maps.LatLngBounds(southWest,northEast);
+                        _data.googleMaps.map.fitBounds(bounds);
+                        _data.options.googleMaps.center = _data.googleMaps.map.getCenter().toJSON();
+                        _data.options.googleMaps.zoom = _data.googleMaps.map.getZoom();
+                    }else{
+                        _data.googleMaps.map.setZoom(_data.options.googleMaps.zoom);
+                        _data.googleMaps.map.setCenter(_data.options.googleMaps.center);
+                    }
                 }else{
-                    _this.setViewBox();
+                    if(toInitial){
+                        var v = _data._viewBox || _data.svgDefault.viewBox;
+                        _data.zoomLevel = 0;
+                        _data._scale = 1;
+                        _this.setViewBox(v);
+                    }else{
+                        _this.setViewBox();
+                    }
                 }
             },
             getGeoViewBox : function(){
-                var v = _data.viewBox;
-                var leftLon = _this.convertSVGToGeo(v[0],v[1])[1];
-                var rightLon = _this.convertSVGToGeo(v[0]+v[2],v[1])[1];
-                var topLat = _this.convertSVGToGeo(v[0],v[1])[0];
+                var v         = _data.viewBox;
+                var leftLon   = _this.convertSVGToGeo(v[0],v[1])[1];
+                var rightLon  = _this.convertSVGToGeo(v[0]+v[2],v[1])[1];
+                var topLat    = _this.convertSVGToGeo(v[0],v[1])[0];
                 var bottomLat = _this.convertSVGToGeo(v[0],v[1]+v[3])[0];
                 return [leftLon, topLat, rightLon, bottomLat];
             },
             mapAdjustStrokes : function(){
-                _data.regions.forEach(function(region){
-                    if(region.svg_style['stroke-width']){
-                        region.node.css('stroke-width', region.svg_style['stroke-width'] / _data.scale);
-                    }
+                var _this = this;
+                _data.$svg.find('path, polygon, circle, ellipse, rect').each(function(index){
+                        if($(this).data('stroke-width')) {
+                            $(this).css('stroke-width', $(this).data('stroke-width') / _data.scale);
+                        }
                 });
             },
             // ZOOM
             zoomIn: function(center){
-                if(_data.canZoom) {
+                if(_data.googleMaps.map){
+                    if(!_data.isZooming){
+                        _data.isZooming = true;
+                        var zoom = _data.googleMaps.map.getZoom()+1;
+                        zoom = zoom > 20 ? 20 : zoom;
+                        _data.googleMaps.map.setZoom(zoom);
+                    }
+                }else if(_data.canZoom){
                     _data.canZoom = false;
-                    setTimeout(function () {
+                    setTimeout(function(){
                         _data.canZoom = true;
                     }, 700);
                     _this.zoom(1, center);
                 }
             },
             zoomOut: function(center){
-                if(_data.canZoom) {
+                if(_data.googleMaps.map){
+                    if(!_data.isZooming && _data.googleMaps.map.getZoom()-1 >= _data.options.googleMaps.minZoom) {
+                        _data.isZooming = true;
+                        var zoom = _data.googleMaps.map.getZoom() - 1;
+                        zoom = zoom < 1 ? 1 : zoom;
+                        _data.googleMaps.map.setZoom(zoom);
+                    }
+                }else if(_data.canZoom){
                     _data.canZoom = false;
-                    setTimeout(function () {
+                    setTimeout(function(){
                         _data.canZoom = true;
                     }, 700);
                     _this.zoom(-1, center);
@@ -2547,7 +3681,30 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             touchZoomEnd : function(){
 
             },
-            zoomTo : function (region, padding){
+            zoomTo : function (region, zoomToLevel){
+
+                zoomToLevel = zoomToLevel!=undefined ? parseInt(zoomToLevel) : false;
+
+
+                if(_data.googleMaps.map) {
+                    var bounds = region.getGeoBounds();
+                    var southWest = new google.maps.LatLng(bounds.sw[0], bounds.sw[1]);
+                    var northEast = new google.maps.LatLng(bounds.ne[0], bounds.ne[1]);
+                    var bounds = new google.maps.LatLngBounds(southWest,northEast);
+                    _data.googleMaps.map.fitBounds(bounds);
+                    return;
+                }
+
+                // if(_regionOrCenter.length && _regionOrCenter.length==2){
+                //     zoomLevel = zoomLevel || 0;
+                //     center = _regionOrCenter;
+                //     xy = _this.convertGeoToPixel(center);
+                //     var z = _data.zoomLevels[zoomLevel];
+                //     _this.setViewBox([xy[0]- z.viewBox[2]/2,xy[1]- z.viewBox[3]/2, z.viewBox[2], z.viewBox[3]]);
+                //     _this.updateSize();
+                //     _data._scale = z._scale;
+                //     _data.zoomLevel = zoomLevel;
+                // }else{
 
                 var bbox = [], viewBox, viewBoxPrev = [];
 
@@ -2590,12 +3747,10 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 }
 
                 var viewBoxPrev = [];
-                // var padding = 30*_data.scale;
-                padding = 0;
                 $.each(_data.zoomLevels, function(key, level){
                     if(viewBoxPrev.length){
                         if(bbox[2]>bbox[3] && ((viewBoxPrev[2] > bbox[2]) && (bbox[2] > level.viewBox[2]))){
-                            _data.zoomLevel = parseInt(key)-1;
+                            _data.zoomLevel = zoomToLevel ? zoomToLevel :  parseInt(key)-1;
                             var vb = _data.zoomLevels[_data.zoomLevel].viewBox;
 
                             _this.setViewBox([bbox[0]-vb[2]/2+bbox[2]/2,
@@ -2605,7 +3760,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                             // _this.updateSize();
                             _data._scale = _data.zoomLevels[_data.zoomLevel]._scale;
                         }else if (bbox[2]<bbox[3] && ((viewBoxPrev[3] > bbox[3]) && (bbox[3] > level.viewBox[3]))){
-                            _data.zoomLevel = parseInt(key)-1;
+                            _data.zoomLevel = zoomToLevel ? zoomToLevel :  parseInt(key)-1;
                             var vb = _data.zoomLevels[_data.zoomLevel].viewBox;
                             _this.setViewBox([bbox[0]-vb[2]/2+bbox[2]/2,
                                               bbox[1]-vb[3]/2+bbox[3]/2,
@@ -2620,14 +3775,28 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
             },
             centerOn : function(region, yShift){
-                var bbox = region.getBBox();
-                var vb   = _data.viewBox;
-                yShift   = yShift !== undefined ? yShift : vb[3]*.25;
-                _this.setViewBox(
-                    [bbox[0]-vb[2]/2+bbox[2]/2,
-                        bbox[1]-vb[3]/2+bbox[3]/2 - yShift,
-                        vb[2],
-                        vb[3]]);
+
+
+                if(_data.options.googleMaps.on){
+                    yShift = yShift ? (yShift+12)/_this.getScale() : 0;
+                    _data.$map.addClass('scrolling');
+                    var latLng = region.getCenterLatLng(yShift);
+                    _data.googleMaps.map.setCenter(latLng);
+                    setTimeout(function(){
+                        _data.$map.removeClass('scrolling');
+                    },100);
+                }else{
+                    yShift = yShift ? (yShift+12)/_this.getScale() : 0;
+                    var bbox = region.getBBox();
+                    var vb   = _data.viewBox;
+                    _this.setViewBox(
+                        [bbox[0]-vb[2]/2+bbox[2]/2,
+                            bbox[1]-vb[3]/2+bbox[3]/2 - yShift,
+                            vb[2],
+                            vb[3]]);
+                    // _this.updateSize();
+                    // _data._scale = _data.zoomLevels[_data.zoomLevel]._scale;
+                }
 
             },
             zoom : function (delta, center, exact){
@@ -2683,7 +3852,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                     newViewBox[3]  = _data._viewBox[3] / exact;
                 }
 
-                shift = [];
+                var shift = [];
                 if(center){
                     var koef = d > 0 ? 0.5 : -1; // 1/2 * (d=1) || 2 * (d=-1)
                     shift = [((center[0] - _data.viewBox[0]) * koef), ((center[1] - _data.viewBox[1]) * koef)];
@@ -2709,16 +3878,27 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 }
 
                 _this.setViewBox(newViewBox);
+                // _this.trigger('zoom');
 
             },
             // MARK : DELETE
             markerDelete: function(marker){
+
                 var id = marker.id;
-                var test = _data.markers.splice(_data.markersDict[id],1);
-                //_data.options.markers.splice(_data.markersDict[id],1);
+                if (!(marker instanceof Marker)){
+                    marker = _this.getMarker(marker.id);
+                }
+
+                if(_data.editingMarker && _data.editingMarker.id == marker.id){
+                    _data.editingMarker = null;
+                    delete _data.editingMarker;
+                }
+
                 marker.delete();
-                marker = null;
+                _data.markers.splice(_data.markersDict[id],1);
+
                 _this.updateMarkersDict();
+
                 if (_data.markers.length == 0)
                     _data.options.markerLastID = 0;
             },
@@ -2873,16 +4053,24 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 // var min = _this.convertSVGToPixel(_this.convertGeoToSVG([85,-180]));
                 // _data.scroll.limit = {
                 //     maxX: max[0]+_data.$map.width(),
-                //     maxY: max[1]+_data.$map.height(),
+                //     maxY: max[1]+_data.$map.outerHeight(),
                 //     minX: min[0],
                 //     minY: min[1]
                 // };
 
-                if(e.type=='mousedown'){
+                if(e.type.indexOf('mouse') === 0 ){
                     $(document).on('mousemove.scroll.mapsvg', _this.scrollMove);
-                    $(document).on('mouseup.scroll.mapsvg', function(e){
-                        _this.scrollEnd(e,mapsvg);
-                    });
+                    if(_data.options.scroll.spacebar){
+                        $(document).on('keyup.scroll.mapsvg', function (e) {
+                            if (e.keyCode == 32) {
+                                _this.scrollEnd(e, mapsvg);
+                            }
+                        });
+                    }else{
+                        $(document).on('mouseup.scroll.mapsvg', function(e){
+                            _this.scrollEnd(e,mapsvg);
+                        });
+                    }
                 }
 
                 //else
@@ -2899,7 +4087,11 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
 
                 // TODO: на каждый зум лев считать допустимые translate xy при данном scale
-                _this.panBy((_data.scroll.gx - ce.clientX),(_data.scroll.gy - ce.clientY));
+                if(_this.panBy((_data.scroll.gx - ce.clientX),(_data.scroll.gy - ce.clientY))){
+                    if(_data.googleMaps.map){
+                        _data.googleMaps.map.panBy((_data.scroll.gx - ce.clientX),(_data.scroll.gy - ce.clientY));
+                    }
+                }
 
                 _data.scroll.gx  = ce.clientX;
                 _data.scroll.gy  = ce.clientY;
@@ -2950,7 +4142,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
                 // call regionClickHandler if mouse did not move more than 5 pixels
                 if (noClick !== true && Math.abs(_data.scroll.dx)<5 && Math.abs(_data.scroll.dy)<5){
-                    _this.popoverOffHandler(e);
+                    // _this.popoverOffHandler(e);
                     if(_data.editMarkers.on)
                         _data.clickAddsMarker && _this.markerAddClickHandler(e);
                     else if (_data.region_clicked)
@@ -2979,7 +4171,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 var tx = _data.scroll.tx - x;
                 var ty = _data.scroll.ty - y;
 
-                if(_data.options.scroll.limit){
+                if(!_data.options.googleMaps.on && _data.options.scroll.limit){
                     var svg = _data.$svg[0].getBoundingClientRect();
                     var bounds = _data.$map[0].getBoundingClientRect();
                     if(svg.left-x > bounds.left || svg.right-x < bounds.right){
@@ -3007,9 +4199,9 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 _data.region_clicked = region;
             },
             touchStart : function (_e,mapsvg){
-                if($(_e.target).hasClass('mapsvg-popover') || $(_e.target).closest('.mapsvg-popover').length ){
-                    return true;
-                }
+                // if($(_e.target).hasClass('mapsvg-popover') || $(_e.target).closest('.mapsvg-popover').length ){
+                //     return true;
+                // }
                 _e.preventDefault();
                 // _e.stopPropagation();
 
@@ -3030,11 +4222,18 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                     _this.scrollStart(_e,mapsvg);
                 }
 
+                $(document).on('touchmove.scroll.mapsvg', function(e){
+                    e.preventDefault(); _this.touchMove(e,_this);
+                }).on('touchend.scroll.mapsvg', function(e){
+                    e.preventDefault(); _this.touchEnd(e,_this);
+                });
+
+
             },
             touchMove : function (_e, mapsvg){
-                if($(_e.target).hasClass('mapsvg-popover') || $(_e.target).closest('.mapsvg-popover').length ){
-                    return true;
-                }
+                // if($(_e.target).hasClass('mapsvg-popover') || $(_e.target).closest('.mapsvg-popover').length ){
+                //     return true;
+                // }
                 _e.preventDefault();
                 var e = _e.originalEvent;
 
@@ -3062,9 +4261,9 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 }
             },
             touchEnd : function (_e, mapsvg){
-                if($(_e.target).hasClass('mapsvg-popover') || $(_e.target).closest('.mapsvg-popover').length ){
-                    return true;
-                }
+                // if($(_e.target).hasClass('mapsvg-popover') || $(_e.target).closest('.mapsvg-popover').length ){
+                //     return true;
+                // }
                 _e.preventDefault();
                 var e = _e.originalEvent;
                 if(_data.touchZoomStart){
@@ -3073,6 +4272,11 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 }else if(_data.isScrolling){
                     _this.scrollEnd(_e, mapsvg);
                 }
+
+                $(document).off('touchmove.scroll.mapsvg');
+                $(document).off('touchend.scroll.mapsvg');
+
+
             },
             markersGroupHide : function(group){
                 for(var i in _data.markers[group]){
@@ -3103,7 +4307,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 return _data.selected_id;
             },
             // SELECT REGION
-            selectRegion :    function(id){
+            selectRegion :    function(id, skipDirectorySelection){
                 // _this.hidePopover();
                 if(typeof id == "string"){
                     var region = _this.getRegion(id);
@@ -3152,6 +4356,12 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                         region.unhighlight();
                 });
                 _data.highlightedRegions = [];
+            },
+            convertMouseToSVG : function(e){
+                var mc = MapSVG.mouseCoords(e);
+                var x = mc.x - _data.$svg.offset().left;
+                var y = mc.y - _data.$svg.offset().top;
+                return _this.convertPixelToSVG([x,y]);
             },
             convertSVGToPixel : function(xy){
                 var scale = _this.getScale();
@@ -3238,7 +4448,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             regionClickHandler : function(e, region, skipPopover){
 
                 _data.region_clicked = null;
-                var actions          = _data.options.actions;
+                var actions = _data.options.actions;
 
                 if(region.mapsvg_type=='region')
                     _this.selectRegion(region.id);
@@ -3246,11 +4456,10 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                     _data.regionEditHandler.call(region);
                     return;
                 }
-                _this.hidePopover();
+                // _this.hidePopover();
 
 
-                var popover = _this.getPopoverBody(region);
-                popover && _this.showPopover(e, popover, null, region);
+                _this.showPopover(region);
 
                 if(_data.options.onClick)
                     _data.options.onClick.call(region, e, _this);
@@ -3452,82 +4661,90 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 return popover;
             },
             popoverAdjustPosition: function(){
-                if(!_data.mapPopover || !_data.mapPopover.point) return;
+                if(!_data.$popover || !_data.$popover.data('point')) return;
 
-                var pos = _this.convertSVGToPixel(_data.mapPopover.point);
+                var pos = _this.convertSVGToPixel(_data.$popover.data('point'));
 
                 // pos[0] = pos[0] - (_data.layers.popovers.offset().left - _data.$map.offset().left);
                 // pos[1] = pos[1] - (_data.layers.popovers.offset().top - _data.$map.offset().top);
 
-                _data.mapPopover.css({
+                _data.$popover.css({
                     'transform': 'translateX(-50%) translate('+pos[0]+'px,'+pos[1]+'px)'
                 });
             },
-            showPopover : function (e, content, pos, mapObject){
+            showPopover : function (mapObject){
 
+                // TODO check why need this:
+                // var popoverShown = false;
 
-                if(mapObject && _data.options.popovers.centerOn && !(MapSVG.isPhone && _data.options.popovers.mobileFullscreen)){
-                    _this.centerOn(mapObject, 0);
-                }
+                // var mapObject = object instanceof Region ? object : (object.marker&&object.marker.id ? _this.getMarker(object.marker.id) : null);
+                if(!mapObject)
+                    return;
 
-                if(mapObject){
-                    var center = mapObject.getCenter();
-                    e.clientX = center[0];
-                    e.clientY = center[1];
-                }
+                var _this = this;
 
-                if (!pos || pos.length != 2){
-                    var m   = MapSVG.mouseCoords(e);
-                    var pos = [m.x, m.y];
+                var template  = _this.getPopoverBody(mapObject);
+                if(!template)
+                    return;
+
+                var point;
+                if(mapObject instanceof Marker){
+                    point = {x: mapObject.x, y: mapObject.y};
                 }else{
-                    var scale = _this.getScale();
-                    pos[0] = _data.$map.offset().left  + pos[0]*scale;
-                    pos[1] = _data.$map.offset().top + pos[1]*scale;
+                    point = mapObject.getCenterSVG();
                 }
+                _this.popover && _this.popover.destroy();
+                _this.popover = new MapSVG.PopoverController({
+                    container: _data.$popover,
+                    point: point,
+                    yShift: mapObject instanceof Marker ? mapObject.height : 0,
+                    template: template,
+                    mapsvg: _this,
+                    data: template,//object instanceof Region ? object.forTemplate() : object,
+                    mapObject: mapObject,
+                    scrollable: true,
+                    withToolbar: true,
+                    events: {
+                        'shown': function(){
+                            if(_data.options.popovers.centerOn){
+                                var shift = this.container.height()/2;
+                                if(_data.options.popovers.centerOn && !(MapSVG.isPhone && _data.options.popovers.mobileFullscreen)){
+                                    _this.centerOn(mapObject, shift);
+                                }
+                            }
+                            // _data.events['shown.popover'] && _data.events['shown.popover'].call(this);
+                            // _this.trigger('popoverShown');
+                        },
+                        'closed': function(){
+                            _data.options.popovers.centerOn && _data.options.popovers.resetViewboxOnClose && _this.viewBoxReset(true);
+                            // _data.events['closed.popover'] && _data.events['closed.popover'].call(this);
+                            // _this.trigger('popoverClosed');
+                        },
+                        'resize': function(){
+                            if(_data.options.popovers.centerOn){
+                                var shift = this.container.height()/2;
+                                if(_data.options.popovers.centerOn && !(MapSVG.isPhone && _data.options.popovers.mobileFullscreen)){
+                                    _this.centerOn(mapObject, shift);
+                                }
+                            }
+                         }
+                    }
+                });
 
-                var popoverShown = false;
-                if(content){
-                    _data.mapPopover.contentDiv.html(content);
-                    // var nx = pos[0] - _data.$map.offset().left;
-                    // var ny = pos[1] - _data.$map.offset().top;
+                // var center = mapObject.getCenterSVG();
+                // _data.$popover.data('point', [center.x,center.y]);
+                // _this.popoverAdjustPosition();
 
-                    var nx = pos[0] - _data.$svg.offset().left;
-                    var ny = pos[1] - _data.$svg.offset().top;
+                // _data.$popover.addClass('mapsvg-popover-visible');
+                // _data.$popover.addClass('mapsvg-popover-animate');
+                //
+                // popoverShown = true;
 
-                    // if(nx<0) nx = 0;
-                    // if(ny<0) ny = 0;
-                    //if(nx+_data.mapPopover.outerWidth(false) > $(window).scrollLeft() + $(window).width()) nx = ($(window).scrollLeft() + $(window).width()) - _data.mapPopover.outerWidth(false);
-                    //if(ny+_data.mapPopover.outerHeight(false) > $(window).scrollTop() + $(window).height()) ny = ($(window).scrollTop() + $(window).height()) - _data.mapPopover.outerHeight(false);
-                    //if(nx < $(window).scrollLeft()) nx = $(window).scrollLeft();
-                    //if(ny < $(window).scrollTop()) ny = $(window).scrollTop();
-
-                    // _data.mapPopover.css('left', nx).css('bottom', ny);
-                    // _data.mapPopover.shift = {x: nx, y: -ny, scale: _data.scale};
-                    _data.mapPopover.point = _this.convertPixelToSVG([nx,ny]);
-                    _this.popoverAdjustPosition();
-
-                    // _data.mapPopover.css({
-                    //     'transform': 'translate('+nx+'px,'+ny+'px)'
-                    // });
-
-                    //_data.mapPopover.show();
-                    _data.mapPopover.addClass('mapsvg-popover-visible');
-                    _data.mapPopover.addClass('mapsvg-popover-animate');
-
-                    popoverShown = true;
-                }
-
-                _data.mapPopover.toggleClass('mapsvg-popover-animate', popoverShown);
-                _data.mapPopover.toggleClass('mapsvg-popover-visible', popoverShown);
-                $('body').toggleClass('mapsvg-popover-open', popoverShown);
+                // $('body').toggleClass('mapsvg-popover-open', popoverShown);
             },
             hidePopover : function(){
-                _data.mapPopover.contentDiv.empty();
-                _data.mapPopover.toggleClass('mapsvg-popover-animate', false);
-                _data.mapPopover.toggleClass('mapsvg-popover-visible', false);
-                $('body').toggleClass('mapsvg-popover-open', false);
-                if(_data.options.onPopoverClose)
-                    _data.options.onPopoverClose.call(_this);
+                _this.popover && _this.popover.close();
+                // $('body').toggleClass('mapsvg-popover-open', false);
             },
             hideTip : function (){
                 _data.tooltip.container.removeClass('mapsvg-tooltip-visible');
@@ -3537,8 +4754,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
                 if(_data.isScrolling || $(e.target).closest('.mapsvg-popover').length || $(e.target).hasClass('mapsvg-btn-zoom'))
                     return;
-
-                _this.hidePopover();
+                this.popover && this.popover.close();
             },
             mouseOverHandler : function(e){
                 //if (this.disabled)
@@ -3588,6 +4804,9 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
                 _data.$map.off('.common.mapsvg');
                 _data.$scrollpane.off('.common.mapsvg');
+                $(document).off('keydown.scroll.mapsvg');
+                $(document).off('mousemove.scrollInit.mapsvg');
+                $(document).off('mouseup.scrollInit.mapsvg');
 
                 if(_data.editMarkers.on){
 
@@ -3633,7 +4852,24 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                     }
                 // }
 
-                if (!_data.options.scroll.on) {
+                if(_data.options.scroll.spacebar){
+                    $(document).on('keydown.scroll.mapsvg', function(e) {
+                        if(!_data.isScrolling && e.keyCode == 32){
+                            e.preventDefault();
+                            _data.$map.addClass('mapsvg-scrollable');
+                            $(document).on('mousemove.scrollInit.mapsvg', function(e) {
+                                _data.isScrolling = true;
+                                $(document).off('mousemove.scrollInit.mapsvg');
+                                _this.scrollStart(e,_this);
+                            }).on('keyup.scroll.mapsvg', function (e) {
+                                if (e.keyCode == 32) {
+                                    $(document).off('mousemove.scrollInit.mapsvg');
+                                    _data.$map.removeClass('mapsvg-scrollable');
+                                }
+                            });
+                        }
+                    });
+                }else if (!_data.options.scroll.on) {
                     var event = MapSVG.touchDevice ? 'touchstart.common.mapsvg' : 'click.common.mapsvg';
                     if(!_data.editMarkers.on) {
                         // if(MapSVG.touchDevice){
@@ -3683,47 +4919,34 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                             });
                     }
                 } else {
-                    // var event = MapSVG.touchDevice ? 'touchstart.common.mapsvg' : 'mousedown.common.mapsvg';
-                    // _data.$map.on('touchstart.common.mapsvg mousedown.common.mapsvg', '.mapsvg-region', function (e) {
-                    //         e.preventDefault();
-                    //         var obj = _this.getRegion($(this).attr('id'));
-                    //         _this.scrollRegionClickHandler.call(_this, e, obj);
-                    //     }
-                    // );
-                    // _data.$map.on('touchstart.common.mapsvg mousedown.common.mapsvg', '.mapsvg-marker', function (e) {
-                    //         e.preventDefault();
-                    //         var obj = _this.getMarker($(this).attr('id'));
-                    //         _this.scrollRegionClickHandler.call(_this, e, obj);
-                    //     }
-                    // );
-                    // if (!MapSVG.touchDevice) {
-                    //     _data.$scrollpane.on('mousedown.common.mapsvg', function(e){_this.scrollStart(e,_this);});
-                    // } else {
-                        _data.$scrollpane.on('touchstart.common.mapsvg mousedown.common.mapsvg', function(e){
-                            if($(e.target).hasClass('mapsvg-region')){
-                                var obj = _this.getRegion($(e.target).attr('id'));
-                                _this.scrollRegionClickHandler.call(_this, e, obj);
-                            }else if($(e.target).hasClass('mapsvg-marker')){
-                                if(_data.editMarkers.on){
-                                    return;
-                                }
-                                var obj = _this.getMarker($(e.target).attr('id'));
-                                _this.scrollRegionClickHandler.call(_this, e, obj);
-                            }
-                            if(e.type=='mousedown'){
-                                _this.scrollStart(e,_this);
-                            }else{
-                                e.preventDefault();
-                                _this.touchStart(e,_this);
-                            }
-                        }).on('touchmove.common.mapsvg', function(e){e.preventDefault(); _this.touchMove(e,_this);})
-                          .on('touchend.common.mapsvg', function(e){e.preventDefault(); _this.touchEnd(e,_this);});
-                    // }
 
-                    // _data.$map.on('mousedown.common.mapsvg', function(e){_this.touchStart(e,_this);});
+                    _data.$map.on('touchstart.common.mapsvg mousedown.common.mapsvg', function(e){
+
+                        if($(e.target).hasClass('mapsvg-popover')||$(e.target).closest('.mapsvg-popover').length){
+                            return;
+                        }
+                        if(e.type=='touchstart'){
+                            e.preventDefault();
+                        }
+
+                        if(e.target && $(e.target).attr('class') && $(e.target).attr('class').indexOf('mapsvg-region')!=-1){
+                            var obj = _this.getRegion($(e.target).attr('id'));
+                            _this.scrollRegionClickHandler.call(_this, e, obj);
+                        }else if(e.target && $(e.target).attr('class') && $(e.target).attr('class').indexOf('mapsvg-marker')!=-1){
+                            if(_data.editMarkers.on){
+                                return;
+                            }
+                            var obj = _this.getMarker($(e.target).attr('id'));
+                            _this.scrollRegionClickHandler.call(_this, e, obj);
+                        }
+                        if(e.type=='mousedown'){
+                            _this.scrollStart(e,_this);
+                        }else{
+                            _this.touchStart(e,_this);
+                        }
+                    });
 
                 }
-
             },
             addLayer: function(name){
                 _data.layers[name] = $('<div class="mapsvg-layer mapsvg-layer-'+name+'"></div>');
@@ -3742,21 +4965,30 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 _data.regions.forEach(function(region, index){
                     _data.regionsDict[region.id] = index;
                 });
+                return region;
             },
             regionDelete: function(id){
                 var index = _data.regionsDict[id];
                 if(index !== undefined){
-                    var r = _this.getRegion('id');
+                    var r = _this.getRegion(id);
                     r.node && r.node.remove();
                     _data.regions.splice(index,1);
-                    delete _data.regionsDict[region.id];
+                    delete _data.regionsDict[id];
+                }else{
+                    if($('#'+id).length){
+                        $('#'+id).remove();
+                    }
                 }
             },
             reloadRegions : function(){
                 var _this = this;
                 _data.regions = [];
                 _data.regionsDict = {};
+                _data.$svg.find('.mapsvg-region').removeClass('mapsvg-region');
+                _data.$svg.find('.mapsvg-region-disabled').removeClass('mapsvg-region-disabled');
                 _data.$svg.find('path, polygon, circle, ellipse, rect').each(function(index){
+                    if($(this).closest('defs').length)
+                        return;
                     if($(this)[0].getAttribute('id')) {
                         var region = new Region($(this), _data.options, _data.regionID, _this);
                         _data.regions.push(region);
@@ -3771,6 +5003,23 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 _data.regions.forEach(function(region, index){
                     _data.regionsDict[region.id] = index;
                 });
+            },
+            reloadRegionsFull : function(){
+                var statuses = _this.regionsDatabase.getSchemaFieldByType('status');
+                _this.regionsDatabase.getLoaded().forEach(function(object){
+                    var region = _this.getRegion(object.id);
+                    if(region){
+                        region.data = object;
+                        if(statuses && object.status !== undefined && object.status!==null){
+                            region.setStatus(object.status);
+                            // _this.setRegionStatus(region, object.status);
+                        }
+                    }
+                });
+                _this.loadDirectory();
+                _this.setGauge();
+                _this.setLayersControl();
+                _this.setGroups();
             },
             // INIT
             init: function(opts, elem) {
@@ -3841,39 +5090,51 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 // Set background
                 _data.$map.addClass('mapsvg').addClass('no-transitions').css('background',_data.options.colors.background);
 
+                _data.$wrap = $('<div class="mapsvg-wrap"></div>');
+                _data.$wrap.insertBefore(_data.$map);
+                _data.$wrap.append(_data.$map);
 
-                // if(!_data.editMode){
-                //
-                //
-                //     _data.$wrap = $('<div class="mapsvg-wrap"></div>');
-                //     _data.$wrap.insertBefore(_data.$map);
-                //     _data.$wrap.append(_data.$map);
-                //
-                //
-                //     if(_data.options.menu.on){
-                //         if(!_data.options.menu.customContainer) {
-                //             _data.$directory = $('<div class="mapsvg-directory"></div>');
-                //
-                //             if(_data.options.menu.position == 'left')
-                //                 _data.$wrap.css({'padding-left': _data.options.menu.width});
-                //             else{
-                //                 _data.$wrap.css({'padding-right': _data.options.menu.width});
-                //                 _data.$directory.addClass('mapsvg-directory-right');
-                //             }
-                //
-                //
-                //             _data.$wrap.append(_data.$directory);
-                //         } else {
-                //             _data.$directory = $('#' + _data.options.menu.containerId);
-                //         }
-                //
-                //     }
-                //
-                //
-                // }
+                if(!_data.editMode){
+
+                    // if(_data.options.menu.on){
+                    //
+                    // }
+
+                    if(_data.options.detailsView.location != 'custom'){
+                        _data.$details   = $('<div class="mapsvg-details-container"></div>');
+                        if(MapSVG.isPhone){
+                            $('body').append(_data.$details);
+                        }else{
+                            _data.$wrap.append(_data.$details);
+                            if(!_data.options.menu.customContainer){
+                                if(_data.options.menu.on && _data.options.detailsView.location == 'near'){
+                                    _data.$details.css({left: _data.options.menu.width});
+                                    _data.$details.addClass('near');
+                                }else if(!_data.options.menu.on || _data.options.detailsView.location == 'top'){
+                                    _data.$details.addClass('top');
+                                }
+                                if(_data.options.detailsView.margin){
+                                    _data.$details.css('margin',_data.options.detailsView.margin);
+                                }
+                            }
+                        }
+                    }else{
+                        _data.$details = $('#'+_data.options.detailsView.containerId);
+                    }
+
+
+                }
+
+
+                // _data.$ratio = $('<div class="mapsvg-ratio"></div>');
+                // _data.$ratio.insertBefore(_data.$map);
+                // _data.$ratio.append(_data.$map);
 
                 var loading = $('<div>'+_data.options.loadingText+'</div>').addClass('mapsvg-loading');
                 _data.$map.append(loading);
+
+                // _data.$mapRatioSize = $('<div class="mapsvg-ratio"></div>').insertBefore(_data.$map);
+                // _data.$map.appendTo(_data.$mapRatioSize);
 
                 _this.addLayer('markers');
                 _this.addLayer('popovers');
@@ -3886,6 +5147,16 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                         return -($(this).outerHeight(false) / 2)+'px';
                     }
                 });
+                if(_data.options.googleMaps.on){
+                    _data.$map.addClass('mapsvg-google-map-loading');
+                }
+
+                // Load extension (common things)
+                if(_data.options.extension && $().mapSvg.extensions && $().mapSvg.extensions[_data.options.extension]){
+                    var ext = $().mapSvg.extensions[_data.options.extension];
+                    ext && ext.common(_this);
+                }
+
 
                 // GET the map by ajax request
                 $.ajax({url: _data.options.source+'?v='+_data.options.svgFileVersion})
@@ -3911,10 +5182,6 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                             alert('MapSVG needs width/height or viewBox parameter to be present in SVG file.')
                             return false;
                         }
-                        if(MapSVG.browser.ie){
-                            _data.$svg.height(_data.svgDefault.height);
-                        }
-
                         // Get geo-coordinates view  box from SVG file
                         var geo               = svgTag.attr("mapsvg:geoViewBox") || svgTag.attr("mapsvg:geoviewbox");
                         if (geo) {
@@ -3936,7 +5203,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                         }
 
                         $.each(_data.svgDefault.viewBox, function(i,v){
-                            _data.svgDefault.viewBox[i] = parseInt(v);
+                            _data.svgDefault.viewBox[i] = parseFloat(v);
                         });
 
                         _data._viewBox  = (_data.options.viewBox.length==4 && _data.options.viewBox ) || _data.svgDefault.viewBox;
@@ -3946,14 +5213,17 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                         });
 
                         svgTag.attr('preserveAspectRatio','xMidYMid meet');
-                        svgTag.attr('width','100%');
-                        svgTag.attr('height','100%');
+                        svgTag.removeAttr('width');
+                        svgTag.removeAttr('height');
 
                         //// Adding moving sticky draggable image on background
                         //if(_data.options.scrollBackground)
                         //    _data.background = _data.R.rect(_data.svgDefault.viewBox[0],_data.svgDefault.viewBox[1],_data.svgDefault.viewBox[2],_data.svgDefault.viewBox[3]).attr({fill: _data.options.colors.background});
 
                         _this.reloadRegions();
+
+                        _data.$scrollpane.append(svgTag);
+
 
                         // Set size
                         _this.setSize(_data.options.width, _data.options.height, _data.options.responsive);
@@ -3964,7 +5234,6 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                         }
 
 
-                        _data.$scrollpane.append(svgTag);
 
                         // Set viewBox
                         _this.setViewBox(_data._viewBox);
@@ -3980,6 +5249,10 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                         _this.setScroll(_data.options.scroll, true);
 
                         _this.setZoom(_data.options.zoom);
+                        _this.setGoogleMaps();
+
+                        // _this.setViewBox([0,0,_data.svgDefault.viewBox[0]*2+_data.svgDefault.viewBox[2],_data.svgDefault.viewBox[1]*2+_data.svgDefault.viewBox[3]]);
+
 
                         // Set tooltips
                         // tooltipsMode is deprecated, need this for backward compatibility
@@ -4006,9 +5279,6 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                         /* EVENTS */
 
                         _this.setEventHandlers();
-
-                        $('#'+_data.$map.attr('id')+' [title]').each(function(){this.removeAttribute('title')});
-                        $('#'+_data.$map.attr('id')+' title').remove();
 
 
                         loading.hide();

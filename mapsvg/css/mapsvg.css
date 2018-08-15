@@ -8,6 +8,15 @@
 .mapsvg-wrap *, .mapsvg * {
     outline: none !important;
     touch-action: manipulation;
+    -webkit-backface-visibility:  hidden;
+    -webkit-tap-highlight-color:  transparent;
+}
+.mapsvg-popover,
+.mapsvg-details-container {
+    outline: none !important;
+    touch-action: manipulation;
+    -webkit-backface-visibility:  hidden;
+    -webkit-tap-highlight-color:  transparent;
 }
 .mapsvg.mapsvg-responsive {
     width: 100%;
@@ -40,18 +49,18 @@
     max-width: none !important;
     max-height: none !important;
     width: 100%;
-    height: 100%;
+    height: auto;
+    /*height: 100vh;*/
     position: relative;
-    -webkit-transition: all .40s;
-    -moz-transition: all .40s;
-    -ms-transition: all .40s;
-    -o-transition: all .40s;
-    transition: all .40s;
+    -webkit-transition: transform .40s;
+    -moz-transition: transform .40s;
+    -ms-transition: transform .40s;
+    -o-transition: transform .40s;
+    transition: transform .40s;
     transform-origin: 0% 0%;
     -webkit-transform-origin: 0% 0%;
 }
 
-/* SMOOTH TRANSITIONS */
 /* SMOOTH TRANSITIONS */
 .mapsvg.no-transitions *
 {
@@ -64,45 +73,91 @@
     -webkit-transform-origin: 0% 0%;
 }
 .mapsvg-popover {
-    -webkit-transition: all .40s;
-    -moz-transition: all .40s;
-    -ms-transition: all .40s;
-    -o-transition: all .40s;
-    transition: all .40s;
+    -webkit-transition: transform .40s;
+    -moz-transition: transform .40s;
+    -ms-transition: transform .40s;
+    -o-transition: transform .40s;
+    transition: transform .40s;
 }
 .mapsvg-marker {
-    -webkit-transition: all .40s;
-    -moz-transition: all .40s;
-    -ms-transition: all .40s;
-    -o-transition: all .40s;
-    transition: all .40s;
+    -webkit-transition: transform .40s;
+    -moz-transition: transform .40s;
+    -ms-transition: transform .40s;
+    -o-transition: transform .40s;
+    transition: transform .40s;
 }
 .mapsvg-scrollpane {
-    -webkit-transition: all .40s;
-    -moz-transition: all .40s;
-    -ms-transition: all .40s;
-    -o-transition: all .40s;
-    transition: all .40s;
+    -webkit-transition: transform .40s;
+    -moz-transition: transform .40s;
+    -ms-transition: transform .40s;
+    -o-transition: transform .40s;
+    transition: transform .40s;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.mapsvg-with-google-map.mapsvg-google-map-loading svg,
+.mapsvg-with-google-map.mapsvg-google-map-loading .mapsvg-scrollpane
+{
+    opacity: 0;
+}
+.mapsvg-google-map-loading.mapsvg-fade-in svg,
+.mapsvg-google-map-loading.mapsvg-fade-in .mapsvg-scrollpane
+{
+    opacity: 1;
+    -webkit-transition: opacity .30s ease-out !important;
+    -moz-transition: opacity .30s ease-out !important;
+    -ms-transition: opacity .30s ease-out !important;
+    -o-transition: opacity .30s ease-out !important;
+    transition: opacity .30s ease-out !important;
 }
 .mapsvg-with-google-map .mapsvg-scrollpane,
 .mapsvg-with-google-map svg,
 .mapsvg-with-google-map .mapsvg-popover,
 .mapsvg-with-google-map .mapsvg-marker
 {
-    -webkit-transition: all .15s;
-    -moz-transition: all .15s;
-    -ms-transition: all .15s;
-    -o-transition: all .15s;
-    transition: all .15s;
+    -webkit-transition: transform .10s ease-out;
+    -moz-transition: transform .10s ease-out;
+    -ms-transition: transform .10s ease-out;
+    -o-transition: transform .10s ease-out;
+    transition: transform .10s ease-out;
 }
-
-.mapsvg-scrollpane.scrolling {
+.mapsvg-with-google-map.scrolling * {
+    -webkit-transition-property: none!important;
+    transition-property: none!important;
+    /*!* These doesn't affect anything, but, just in case. *!*/
+    -webkit-animation: none!important;
+    animation: none!important;
     -webkit-transition: none;
     -moz-transition: none;
     -ms-transition: none;
     -o-transition: none;
     transition: none;
 }
+.mapsvg.scrolling .mapsvg-scrollpane {
+    -webkit-transition: none;
+    -moz-transition: none;
+    -ms-transition: none;
+    -o-transition: none;
+    transition: none;
+}
+
+.mapsvg.mapsvg-scrollable {
+    cursor: move; /* fallback if grab cursor is unsupported */
+    cursor: grab;
+    cursor: -moz-grab;
+    cursor: -webkit-grab;
+}
+
+/* (Optional) Apply a "closed-hand" cursor during drag operation. */
+.mapsvg.scrolling {
+    cursor: grabbing;
+    cursor: -moz-grabbing;
+    cursor: -webkit-grabbing;
+}
+
 
 
 
@@ -121,7 +176,7 @@
     -o-border-radius: 5px;
     border: 1px solid #ccc;
     background: #f5f5f2;
-    color: #999
+    color: #999;
 }
 
 /* ZOOM BUTTONS */
@@ -141,7 +196,9 @@
 .mapsvg-buttons.left {
     left: 0;
 }
-.mapsvg-btn-zoom {
+.mapsvg-btn-zoom,
+.mapsvg-btn
+{
     width: 24px;
     height: 24px;
     border-radius: 2px;
@@ -151,7 +208,9 @@
     background-color: #fff;
     padding: 0;
 }
-.mapsvg-btn-zoom:hover {
+.mapsvg-btn-zoom:hover,
+.mapsvg-btn:hover
+{
     background-color: #f2f2f2;
 }
 .mapsvg-btn-zoom.in {
@@ -162,6 +221,17 @@
 .mapsvg-btn-zoom.out {
     border-top-right-radius: 0;
     border-top-left-radius: 0;
+}
+.mapsvg-btn-back:before {
+    content: '&lsaquo;';
+    display: block;
+    position: absolute;
+    color: #999;
+    height: 24px;
+    width: 24px;
+    line-height: 24px;
+    font-size: 14px;
+    pointer-events: none;
 }
 .mapsvg-btn-zoom.in:before, .mapsvg-btn-zoom.out:before {
     content: '';
@@ -224,12 +294,23 @@
 .mapsvg-tooltip.mapsvg-tt-bottom-right { transform: translateY(25px); }
 
 /* POPOVERS */
-.mapsvg-popover .mapsvg-popover-close {
+.mapsvg-popover-close {
     position: absolute;
     top: 3px;
     right: 3px;
     cursor: pointer;
     z-index: 1200;
+}
+.mapsvg-details-close {
+
+}
+
+.mapsvg-popover .nano > .nano-content {
+    overflow-x    : auto !important;
+}
+
+.mapsvg-popover img {
+    max-width: 100%;
 }
 .mapsvg-popover-close {
     position: absolute;
@@ -242,6 +323,10 @@
     transform: scale(0.25);
     -webkit-transform: scale(0.25);
 }
+.mapsvg-auto-height {
+    position: relative;
+}
+
 .mapsvg-popover-close:hover::before, .mapsvg-popover-close:hover::after {
     background: #666;
 }
@@ -312,21 +397,27 @@
 .mapsvg-popover-close.fat::before, .mapsvg-popover-close.fat::after {
     border-radius: 100%;
 }
+.mapsvg-popover .mapsvg-popover-content {
+    overflow-y: auto;
+}
 .mapsvg-popover {
     background-color: rgba(255,255,255, 1);
+    border: 1px solid rgba(255,255,255, 1);
     border-radius: 5px;
     box-shadow: 0 4px 15px 1px rgba(0, 0, 0, 0.5);
     color: #000;
     display: none;
     font-size: 12px;
     font-family: 'Helvetica',sans-serif;
-    padding: 15px 10px 7px 10px;
+    /*padding: 15px 10px 7px 10px;*/
     position: absolute;
+    width: 250px;
     min-width: 100px;
-    max-width: 300px;
+    max-width: 100%;
     max-height: 300px;
+    min-height: 55px;
     bottom: 100%;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
     transform: translate(-50%);
     -webkit-transform: translateX(-50%);
     -moz-transform: translateX(-50%);
@@ -334,14 +425,32 @@
     -o-transform: translateX(-50%);
     z-index: 2;
 }
+.mapsvg-auto-height {
+    position: relative;
+}
+.mapsvg-popover .mapsvg-controller-view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+.mapsvg-popover .mapsvg-controller-view-toolbar + .mapsvg-controller-view-wrap .mapsvg-controller-view-content {
+    padding-top: 0;
+}
+.mapsvg-popover .mapsvg-controller-view-toolbar {
+    height: 20px;
+}
+
 .mapsvg-popover .mapsvg-popover-content {
     overflow-y: auto;
 }
 .mapsvg-popover:before {
     border-top: 7px solid rgba(255,255,255, 1);
+    border-top-color: inherit;
     border-right: 7px solid transparent;
     border-left: 7px solid transparent;
-    bottom: -6px;
+    bottom: -7px;
     content: '';
     display: block;
     left: 50%;
@@ -356,7 +465,6 @@
     -moz-animation: fade-in .2s linear 1; /* , move-up .2s ease-out */
     -ms-animation: fade-in .2s linear 1; /* , move-up .2s ease-out */
 }
-
 
 /* CHOROPLETH MAPS */
 .mapsvg-gauge {
@@ -397,6 +505,7 @@
 /* DIRECTORY */
 .mapsvg-wrap {
     position: relative;
+    box-sizing: border-box;
 }
 .mapsvg-wrap .mapsvg-directory {
     display: flex;
@@ -417,7 +526,7 @@
     position: relative;
     height: 100%;
     pointer-events: auto;
-    border-right: 1px solid #eee;
+    /*border-right: 1px solid #eee;*/
 }
 
 .mapsvg-controller-view-wrap.nano {
@@ -500,7 +609,7 @@
 }
 
 .mapsvg-directory-list-wrap:after,
-.mapsvg-details-view:after
+.mapsvg-details-container:after
 {
     content: " ";
     height: 100%;
@@ -580,7 +689,7 @@
 }
 .mapsvg-directory.closed .mapsvg-directory-list-wrap {
 }
-.mapsvg-directory.mapsvg-directory-overlapping .mapsvg-details-view {
+.mapsvg-directory.mapsvg-directory-overlapping .mapsvg-details-container {
     box-shadow: none;
 }
 .mapsvg-directory ul {
@@ -635,6 +744,7 @@
     bottom: 0;
     right: 0;
     overflow: hidden;
+    max-height: 100%;
 }
 .mapsvg-details-container > div {
     background-color: #fafafa;
@@ -656,52 +766,36 @@
     display: none;
 }
 
-.mapsvg-details-view {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    background: #fafafa;
-    padding: 10px;
-    -webkit-font-smoothing: antialiased;
-    background-color: #fafafa;
-    -webkit-transition: all .2s;
-    -moz-transition: all .2s;
-    -ms-transition: all .2s;
-    -o-transition: all .2s;
-    transition: all .2s;
-}
-.over .mapsvg-details-view {
+.over .mapsvg-details-container {
     opacity: 0;
 }
 
-.mapsvg-details-view-toolbar {
-    position: relative;
-    height: 25px;
-}
-.mapsvg-details-view.mapsvg-over {
+/*.mapsvg-details-view-toolbar {*/
+    /*position: relative;*/
+    /*height: 25px;*/
+/*}*/
+.mapsvg-details-container.mapsvg-over {
     left: 0;
     width: 100%;
     z-index: 2;
 }
-.mapsvg-details-view.mapsvg-over:after {
+.mapsvg-details-container.mapsvg-over:after {
     box-shadow: none !important;
 }
-.mapsvg-details-view.mapsvg-near {
+.mapsvg-details-container.mapsvg-near {
     width: 100%;
     z-index: -1;
 }
-.mapsvg-details-view-content.nano {
-    position: absolute;
-    top: 35px;
-    bottom: 0px;
-    left: 10px;
-    right: 0px;
-}
-.mapsvg-details-view-content.nano .nano-content {
-    right: 15px;
-}
+/*.mapsvg-details-container.nano {*/
+    /*position: absolute;*/
+    /*top: 35px;*/
+    /*bottom: 0px;*/
+    /*left: 10px;*/
+    /*right: 0px;*/
+/*}*/
+/*.mapsvg-details-container.nano .nano-content {*/
+    /*right: 15px;*/
+/*}*/
 .mapsvg-controller-view-toolbar {
     padding: 7px;
     box-sizing: border-box;
@@ -717,19 +811,24 @@
     clear: both;
     height: 0;
 }
+.mapsvg-details-container .mapsvg-controller-view-toolbar {
+    height: 28px;
+    padding: 0;
+}
 .mapsvg-details-close {
-    cursor: pointer;
-    background: url('../img/close.png');
-    background-size: cover;
-    width: 25px;
-    height: 25px;
-    display: block;
-    position: relative;
-    float: right;
+    transform: scale(0.4);
+    /*cursor: pointer;*/
+    /*background: url('../img/close.png');*/
+    /*background-size: cover;*/
+    /*width: 25px;*/
+    /*height: 25px;*/
+    /*display: block;*/
+    /*position: relative;*/
+    /*float: right;*/
 }
-.mapsvg-details-close:hover {
-    opacity: .6;
-}
+/*.mapsvg-details-close:hover {*/
+    /*opacity: .6;*/
+/*}*/
 .mapsvg-details-back {
     left: 0;
     right: auto;
@@ -744,10 +843,10 @@
 .mapsvg-marker {
     cursor: pointer;
     position: absolute;
-    botttom: 100%;
     left: 0;
+    top: 0;
     z-index: 1;
-    max-width: none;
+    max-width: none !important;
 }
 .mapsvg-marker-hidden {
     opacity: 0.4;
@@ -763,6 +862,7 @@
     top: 0;
     left: 0;
     z-index: 2;
+    width: 100%;
 }
 .mapsvg-layer {}
 .mapsvg-layer-gm {
@@ -843,7 +943,16 @@
     text-align: left;
     padding: 10px;
     height: 100%;
+}
+.mapsvg-layers-control.closed {
     pointer-events: none;
+}
+.mapsvg-layers-control.closed .mapsvg-layers-label {
+    pointer-events: all;
+}
+.mapsvg-layers-control.mapsvg-top-left {
+    top: 0px;
+    left: 0px;
 }
 .mapsvg-layers-control.mapsvg-top-left {
     top: 0px;
@@ -867,9 +976,11 @@
     background: rgba(255,255,255,0.7);
     padding: 0 7px;
     cursor: pointer;
-}
-.mapsvg-layers-label {
-    pointer-events: all;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
 }
 
 .mapsvg-layers-label:after
@@ -911,7 +1022,6 @@
     bottom: 10px;
     left: 10px;
     right: 10px;
-    pointer-events: none;
 }
 .mapsvg-layers-list-wrap .nano {
     height: 100% !important;
@@ -922,7 +1032,6 @@
     text-align: left;
     background: rgba(255,255,255,0.7);
     cursor: pointer;
-    pointer-events: all;
 }
 .mapsvg-layers-item label {
     cursor: pointer;
@@ -1133,11 +1242,27 @@ input[type="checkbox"].ios8-switch-lg:checked + label:after {
 
 /* MOBILE DEVICES */
 @media (max-width: 812px){ /* 812px = iPhone X, all others phones are smaller */
+    body .mapsvg-details-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 99999;
+        margin: 0 !important;
+        height: auto !important;
+    }
+
+    .mapsvg-layers-control {
+        left: auto !important;
+    }
+
     body.mapsvg-fullscreen-popovers .mapsvg-popover {
-        -webkit-transform: none !important;;
-        -moz-transform: none !important;;
-        -ms-transform: none !important;;
-        -o-transform: none !important;;
+        font-size: 1.2em;
+        -webkit-transform: none !important;
+        -moz-transform: none !important;
+        -ms-transform: none !important;
+        -o-transform: none !important;
         transform: none !important;
         top: 0 !important;
         left: 0 !important;
@@ -1149,6 +1274,9 @@ input[type="checkbox"].ios8-switch-lg:checked + label:after {
         position: fixed;
         height: 100%;
         min-height: 100%;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        width: 100% !important;
         z-index: 999999999;
     }
     body.mapsvg-fullscreen-popovers .mapsvg-popover.mapsvg-popover-animate {
@@ -1163,7 +1291,9 @@ input[type="checkbox"].ios8-switch-lg:checked + label:after {
     }
 
     /* zoom buttons for mobile devices */
-    .mapsvg-btn-zoom {
+    .mapsvg-btn-zoom,
+    .mapsvg-btn
+    {
         width: 32px;
         height: 32px;
     }
@@ -1180,19 +1310,29 @@ input[type="checkbox"].ios8-switch-lg:checked + label:after {
         width: 1px;
     }
 
-    .mapsvg-popover {
-        padding-top: 20px;
+    /*.mapsvg-popover {*/
+        /*padding-top: 20px;*/
+    /*}*/
+
+    .mapsvg-popover .mapsvg-controller-view-toolbar {
+        height: 38px;
+        padding:0;
+    }
+    .mapsvg-details-container .mapsvg-controller-view-toolbar {
+        height: 38px;
+        padding:0;
     }
 
-    .mapsvg-popover-close {
+    .mapsvg-popover-close
+    {
         top: 3px !important;
         right: 3px !important;
         z-index: 999;
-        -webkit-transform: scale(0.35);
-        -moz-transform: scale(0.35);
-        -ms-transform: scale(0.35);
-        -o-transform: scale(0.35);
-        transform: scale(0.35);
+        -webkit-transform: scale(0.5);
+        -moz-transform: scale(0.5);
+        -ms-transform: scale(0.5);
+        -o-transform: scale(0.5);
+        transform: scale(0.5);
     }
 
     .mapsvg-mobile-buttons {
@@ -1210,7 +1350,7 @@ input[type="checkbox"].ios8-switch-lg:checked + label:after {
         width: 100% !important;
     }
     /* switch "near" to "over" on mobiles */
-    .mapsvg-details-view {
+    .mapsvg-details-conainer     {
         left: 0 !important;
         width: 100% !important;
     }
@@ -1228,6 +1368,7 @@ input[type="checkbox"].ios8-switch-lg:checked + label:after {
     .mapsvg-directory {
         overflow: visible !important;
     }
+    /*
     .mapsvg-directory-filter-wrap {
         padding: 20px;
         position: fixed;
@@ -1243,6 +1384,7 @@ input[type="checkbox"].ios8-switch-lg:checked + label:after {
         display: block;
         margin-top: 15px;
     }
+    */
 }
 
 
