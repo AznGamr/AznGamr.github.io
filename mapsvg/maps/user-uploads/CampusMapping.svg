@@ -45,8 +45,8 @@
      id="namedview4"
      showgrid="false"
      inkscape:zoom="1.7367927"
-     inkscape:cx="1320.8568"
-     inkscape:cy="875.55086"
+     inkscape:cx="1316.3886"
+     inkscape:cy="691.30319"
      inkscape:window-x="-9"
      inkscape:window-y="1341"
      inkscape:window-maximized="1"
@@ -20093,7 +20093,7 @@ AAAAAElFTkSuQmCC
        id="title4572">SSF82</title>
   </path>
   <path
-     style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     style="fill:#ebdc8a;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:0.47761193"
      d="m 1630.304,519.64539 15.258,8.63661 -15.5459,28.50081 11.5155,5.75774 2.591,-4.3183 14.3943,7.48506 -37.4253,69.95653 -14.9701,-8.92449 14.9701,-27.34926 -10.9397,-6.62141 -2.591,4.89408 -14.6822,-8.34872 z"
      id="SSF35"
      inkscape:connector-curvature="0"
@@ -20140,10 +20140,14 @@ AAAAAElFTkSuQmCC
      id="path3729"
      inkscape:connector-curvature="0" />
   <path
-     style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     style="fill:#92ad67;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:0.3482587"
      d="m 1252.3084,561.67689 -28.069,-17.56111 15.258,-22.02335 -4.4622,-3.16676 1.4394,-2.87887 3.5986,3.02282 c 0,0 10.7957,-12.81097 1.5834,-23.89462 l -4.0305,3.16675 -2.3031,-3.45464 10.0761,-7.62901 21.1597,24.90223 13.3867,-11.51548 -3.3107,-4.46225 13.2428,-11.22759 -39.8723,-47.6453 -47.7893,40.01629 11.9474,13.53069 c 0,0 -12.6671,5.46985 -9.2124,20.15209 l -29.0766,43.18305 57.1456,38.7208 z"
-     id="path3731"
-     inkscape:connector-curvature="0" />
+     id="SSF56"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path3731">
+    <title
+       id="title4574">SSF56</title>
+  </path>
   <path
      style="fill:#bfd7a9;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:0.45273632"
      d="m 1711.59,481.232 54.1488,-96.28711 -111.3511,-60.45935 -6.7177,-0.20357 -7.532,14.04611 -23.4102,-13.23184 -6.7177,0.20357 -21.1709,37.25273 29.3136,17.71031 11.3997,12.21401 40.917,59.84865 15.4711,15.06395 z"
