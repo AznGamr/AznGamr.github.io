@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link href="/mapsvg/css/mapsvg.css" rel="stylesheet">
+<script src="/mapsvg/js/jquery.js"></script>
+<script src="/mapsvg/js/jquery.mousewheel.min.js"></script>
+<script src="/mapsvg/js/mapsvg.min.js"></script>
+</head>
+<body>
+
+    
+    <div id="mapsvg"></div>
+
+    <script type="text/javascript">
+    jQuery(document).ready(function(){
+    jQuery("#mapsvg").mapSvg({width: 2303,height: 1267,regions: {'SSF09': {id: "SSF09",'id_no_spaces': "SSF09",popover: "SSF09 </br>\nFloors: 2 </br>\nNWE </br>\n9-1 </br>",data: {}},'SSF56': {id: "SSF56",'id_no_spaces': "SSF56",popover: "SSF56 </br>\nFloors: 2 </br>\nNWE: </br>\n56-1 </br>",data: {}}},viewBox: [0,0,2303,1267],tooltips: {mode: "title",on: false,priority: "local",position: "bottom-right"},popovers: {mode: "off",on: false,priority: "local",position: "top",centerOn: false,width: 300,maxWidth: 50,maxHeight: 50,resetViewboxOnClose: true,mobileFullscreen: true},gauge: {on: false,labels: {low: "low",high: "high"},colors: {lowRGB: {r: 85,g: 0,b: 0,a: 1},highRGB: {r: 238,g: 0,b: 0,a: 1},low: "#550000",high: "#ee0000",diffRGB: {r: 153,g: 0,b: 0,a: 0}},min: 0,max: false},source: "/mapsvg/maps/user-uploads/CampusMapping.svg",title: "CampusMapping",responsive: true});
+    });
+    </script>
+    
+<ul id="mapsvg-menu-regions"></ul>
+    
+</body>
+</html>
