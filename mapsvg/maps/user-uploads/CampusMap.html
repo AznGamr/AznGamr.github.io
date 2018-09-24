@@ -13,9 +13,7 @@
 <body>
 
     
-<div id="mapsvg" style="width: 80%; float: left;"></div>
-
-<div id="mapsvg-menu-regions" style="width: 18%; float: right;"></div>
+<div id="mapsvg"></div>
 
 <script type="text/javascript">
 jQuery(document).ready(function(){
@@ -24,6 +22,8 @@ return '<li><a href="#' + region.id + '">' + (region.title||region.id) + '</a></
 }},source: "/mapsvg/maps/user-uploads/CampusMapping.svg",title: "CampusMapping",responsive: "1"});
 });
 </script>
+    
+<ul id="mapsvg-menu-regions"></ul>
     
 </body>
 </html>
