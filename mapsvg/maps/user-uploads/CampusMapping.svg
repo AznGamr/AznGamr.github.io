@@ -44,9 +44,9 @@
      inkscape:window-height="1001"
      id="namedview4"
      showgrid="false"
-     inkscape:zoom="1.7367927"
-     inkscape:cx="1658.326"
-     inkscape:cy="222.98872"
+     inkscape:zoom="0.86839635"
+     inkscape:cx="160.31469"
+     inkscape:cy="1019.3266"
      inkscape:window-x="-9"
      inkscape:window-y="-9"
      inkscape:window-maximized="1"
@@ -90,8 +90,12 @@
   <path
      style="fill:#0000ff;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:0.49803922"
      d="m 1817.5745,704.037 27.0613,-50.09233 -2.5909,-0.71972 6.1895,-10.79576 -2.1591,-0.57578 1.0076,-2.59098 -2.591,-2.15915 1.5834,-3.45464 -7.629,-6.76535 -10.6518,-3.16676 -2.0152,3.59859 -2.3031,-0.86366 -1.7274,2.87887 -2.0152,-1.43943 -4.6062,9.9321 -2.447,-1.72732 -4.0304,7.19717 7.485,4.46225 -1.7273,4.3183 3.5986,2.59099 -8.3487,17.12927 -3.4547,-1.87126 -6.6214,11.65942 1.7274,2.01521 -0.2879,4.60619 -4.3183,7.05323 6.1895,4.03042 2.735,-1.72732 1.5833,2.73492 2.1592,1.43944 v -1.58338 z"
-     id="path3721"
-     inkscape:connector-curvature="0" />
+     id="SSF33"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path3721">
+    <title
+       id="title1067">SSF33</title>
+  </path>
   <path
      style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
      d="m 1836.4311,770.5389 -1.8713,41.02389 -56.138,-3.45464 1.2955,-26.34166 48.7969,-17.12928 -0.144,-3.74253 6.4775,-2.44704 5.6138,3.45465 -0.2879,6.33351 z"
@@ -109,13 +113,21 @@
   <path
      style="fill:#0000ff;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:0.49803922"
      d="m 1655.782,1109.3819 -1.0076,12.667 1.8712,1.2955 -1.1515,10.9397 -1.5834,0.8637 0.4319,12.0912 -50.956,-1.5834 v -12.2352 l -12.3792,0.144 -0.1439,-8.9245 -3.3107,0.7197 0.7197,-18.7126 h 26.6295 v 1.5833 z"
-     id="path3727"
-     inkscape:connector-curvature="0" />
+     id="SSF45"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path3727">
+    <title
+       id="title1061">SSF45</title>
+  </path>
   <path
      style="fill:#0000ff;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:0.49803922"
      d="m 1677.8053,1070.2292 -0.4318,-37.7131 -56.8577,0.1439 0.2879,11.5155 h -13.6746 l 0.1439,8.7805 -4.4622,-0.1439 0.8636,18.1369 26.4856,0.1439 0.4319,-1.1515 z"
-     id="path3729"
-     inkscape:connector-curvature="0" />
+     id="SSF44"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path3729">
+    <title
+       id="title1063">SSF44</title>
+  </path>
   <path
      style="fill:#0000ff;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:0.49751243"
      d="m 1252.3084,561.67689 -28.069,-17.56111 15.258,-22.02335 -4.4622,-3.16676 1.4394,-2.87887 3.5986,3.02282 c 0,0 10.7957,-12.81097 1.5834,-23.89462 l -4.0305,3.16675 -2.3031,-3.45464 10.0761,-7.62901 21.1597,24.90223 13.3867,-11.51548 -3.3107,-4.46225 13.2428,-11.22759 -39.8723,-47.6453 -47.7893,40.01629 11.9474,13.53069 c 0,0 -12.6671,5.46985 -9.2124,20.15209 l -29.0766,43.18305 57.1456,38.7208 z"
@@ -146,8 +158,12 @@
   <path
      style="fill:#0000ff;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:0.49803922"
      d="m 1433.1014,718.71924 -0.7197,-29.7963 -100.3286,3.02281 0.7197,29.07659 z"
-     id="path3737"
-     inkscape:connector-curvature="0" />
+     id="SSF28"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path3737">
+    <title
+       id="title1065">SSF28</title>
+  </path>
   <path
      style="fill:#0000ff;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:0.49803922;"
      d="m 1715.2542,566.11938 c 0,0 -9.3641,-25.64943 -35.8278,-10.17835 0,0 -18.1174,16.48892 -3.4606,32.16356 l 2.4428,-1.42496 3.2571,4.07133 -1.0179,2.84994 c 0,0 1.0179,5.08917 19.5424,3.6642 l 3.8678,1.42497 16.2854,-28.90649 z"
@@ -160,11 +176,19 @@
   <path
      style="fill:#0000ff;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:0.49803922"
      d="m 1972.5626,363.16326 -61.2736,83.25883 2.4428,2.64637 -3.0535,4.27491 9.5676,5.4963 -6.9212,9.56764 35.6242,26.66726 6.9212,-9.97478 8.7534,7.12484 2.4428,-3.86777 3.4607,2.4428 22.3923,-30.94216 4.2749,3.66421 0.8143,5.29273 9.9747,-12.82471 -8.1426,-5.69987 24.0209,-33.38496 -7.9391,-5.69987 -4.4785,5.49631 -20.1531,-15.06395 c 0,0 10.789,-9.16051 0,-20.96738 l 2.2392,-3.25707 z"
-     id="path1051"
-     inkscape:connector-curvature="0" />
+     id="SSF05"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path1051">
+    <title
+       id="title1069">SSF05</title>
+  </path>
   <path
      style="fill:#0000ff;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;fill-opacity:0.49803922"
      d="m 1767.978,415.88707 27.685,15.47108 2.2393,-5.29274 33.7921,18.11745 c 0,0 19.1353,-3.86777 14.2496,-25.44586 l -36.0313,-19.74598 c 0,0 -18.7281,-15.47108 -27.4815,-6.31057 l -1.6285,0.20357 z"
-     id="path1053"
-     inkscape:connector-curvature="0" />
+     id="SSF06"
+     inkscape:connector-curvature="0"
+     inkscape:label="#path1053">
+    <title
+       id="title1059">SSF06</title>
+  </path>
 </svg>
