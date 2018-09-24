@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link href="/mapsvg/css/mapsvg.css" rel="stylesheet">
+    <link href="/mapsvg/css/nanoscroller.css" rel="stylesheet">
+    <script src="/mapsvg/js/jquery.js"></script>
+    <script src="/mapsvg/js/jquery.mousewheel.min.js"></script>
+    <script src="/mapsvg/js/jquery.nanoscroller.min.js"></script>
+    <script src="/mapsvg/js/mapsvg.min.js"></script>
+</head>
+<body>
+
+    
+<div id="mapsvg" style="width: 80%; float: left;"></div>
+<div id="mapsvg-menu" style="width: 20%; float: right;"></div>
+
+<script type="text/javascript">
+jQuery(document).ready(function(){
+jQuery("#mapsvg").mapSvg({width: 2303,height: 1267,regions: {'SSF05': {id: "SSF05",'id_no_spaces': "SSF05",popover: "SSF05 </br>\n </br>\nNWE Floors: </br>\nSSF05-01",data: {}},'SSF06': {id: "SSF06",'id_no_spaces': "SSF06",popover: "SSF06 </br>\n </br>\nNWE Floors: </br>\nSSF06-02",data: {}},'SSF09': {id: "SSF09",'id_no_spaces': "SSF09",popover: "SSF09 </br>\n </br>\nNWE Floors: </br>\nSSF09-01 </br>\nSSF09-02",data: {}},'SSF25': {id: "SSF25",'id_no_spaces': "SSF25",popover: "SSF25 </br>\n </br>\nNWE Floors: </br>\nSSF25-01 (Drop-In)",data: {}},'SSF26': {id: "SSF26",'id_no_spaces': "SSF26",popover: "SSF26 </br>\n </br>\nNWE Floors: </br>\nSSF26-02",data: {}},'SSF28': {id: "SSF28",'id_no_spaces': "SSF28",popover: "SSF28 </br>\n </br>\nNWE Floors: </br>\nSSF28-02",data: {}},'SSF32': {id: "SSF32",'id_no_spaces': "SSF32",popover: "SSF32 </br>\n </br>\nNWE Floors: </br>\nSSF32-01 </br>\nSSF32-02 </br>\nSSF32-03 </br>\nSSF32-05",data: {}},'SSF33': {id: "SSF33",'id_no_spaces': "SSF33",popover: "SSF33 </br>\n </br>\nNWE Floors: </br>\nSSF33-04",data: {}},'SSF34': {id: "SSF34",'id_no_spaces': "SSF34",popover: "SSF34 </br>\n </br>\nNWE Floors: </br>\nSSF34-01",data: {}},'SSF35': {id: "SSF35",'id_no_spaces': "SSF35",popover: "SSF35 </br>\n</br>\nNWE Floors: </br>\nSSF35-02 </br>\nSSF35-03 </br>\nSSF35-04 </br>\nSSF35-05 </br>\nSSF35-06 </br>\nSSF35-07",data: {}},'SSF36': {id: "SSF36",'id_no_spaces': "SSF36",popover: "SSF36 </br>\n </br>\nNWE Floors: </br>\nSSF36-01",data: {}},'SSF44': {id: "SSF44",'id_no_spaces': "SSF44",popover: "SSF44 </br>\n </br>\nNWE Floors: </br>\nSSF44-01 </br>\nSSF44-03",data: {}},'SSF45': {id: "SSF45",'id_no_spaces': "SSF45",popover: "SSF45 </br>\n </br>\nNWE Floors: </br>\nSSF45-01 </br>\nSSF45-03 </br>\nSSF45-04",data: {}},'SSF56': {id: "SSF56",'id_no_spaces': "SSF56",popover: "SSF56 </br>\n </br>\nNWE Floors: </br>\nSSF56-01",data: {}},'SSF82': {id: "SSF82",'id_no_spaces': "SSF82",popover: "SSF82 </br>\n </br>\nNWE Floors: </br>\nSSF82-11 </br>\nSSF82-12 </br>\nSSF82-13",data: {}}},viewBox: [0,0,2303,1267],zoom: {on: true,limit: [0,10],delta: 2,buttons: {on: true,location: "right"},mousewheel: true},scroll: {on: true,limit: false,background: false,spacebar: false},tooltips: {mode: "id",on: false,priority: "local",position: "bottom-right"},popovers: {mode: "off",on: false,priority: "local",position: "top",centerOn: true,width: 300,maxWidth: 50,maxHeight: 50,resetViewboxOnClose: true,mobileFullscreen: "0"},gauge: {on: false,labels: {low: "low",high: "high"},colors: {lowRGB: {r: 85,g: 0,b: 0,a: 1},highRGB: {r: 238,g: 0,b: 0,a: 1},low: "#550000",high: "#ee0000",diffRGB: {r: 153,g: 0,b: 0,a: 0}},min: 0,max: false},menu: {on: true,containerId: "mapsvg-menu-regions",template: function(region){
+return '<li><a href="#' + region.id + '">' + (region.title||region.id) + '</a></li>'
+}},source: "/mapsvg/maps/user-uploads/CampusMapping.svg",title: "CampusMapping",responsive: "1"});
+});
+</script>
+    
+</body>
+</html>
