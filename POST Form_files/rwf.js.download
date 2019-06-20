@@ -1,0 +1,44 @@
+
+function attached_file_count(count) {
+ 	// IDs : attach_files1 -> attach_files5
+    var ids = ["attach_files1", "attach_files2", "attach_files3", "attach_files4", "attach_files5"];
+
+
+	//alert("file count: " + count );
+    for (var i = 0; i < 5; i++) {
+        var node = document.getElementById(ids[i]);
+        if (node != null) {
+        	if (count > i)
+        		node.style.display = "none";
+        	else
+        		node.style.display = "block";
+        }
+    }
+}
+
+
+
+
+function setVisibilityByPrefixSufix(idPrefix, enableSuffix1, enableSuffix2) {
+	$('[id^="'+idPrefix+'"]').hide();
+
+	if (enableSuffix1 != undefined){
+		$('[id^="'+idPrefix+enableSuffix1+'"]').show();
+	}
+
+	if (enableSuffix2 != undefined){
+		$('[id^="'+idPrefix+enableSuffix2+'"]').show();
+	}
+}
+
+function getRadioIndex(radioId) {
+	return $("input:radio[name='"+radioId+"']").index($("input:radio[name='"+radioId+"']:checked"));
+}
+
+if(typeof resetClick !== 'function'){
+	function resetClick(obj){
+		obj.disabled='disabled';
+		obj.innerHTML='Submitting...'
+			obj.innerText='Submitting...'
+	}
+}

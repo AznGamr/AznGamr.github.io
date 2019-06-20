@@ -1,0 +1,192 @@
+/* Remedy integration */
+/* may 19 2006: spark */
+
+@import "CIT.css";
+
+body {margin:0px; font-size:8pt;}
+
+html { 
+	background: url(Access%20Solutions%20Banner.PNG) no-repeat center center fixed; 
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+}
+
+div#wrapper {
+	margin: 0 auto;
+	max-width: 1200px;
+	min-width: 790px;
+	padding: 0;
+		
+}
+
+div#border {
+	margin: 8px;
+	border-radius: 3px;
+    border-color: #E3E3E3;
+    border-style: solid;
+    border-width: 1px;
+}
+
+#banner {margin:0px; background-color:#1a4f8f;}
+#nav {margin:1px 0px 5px 0px; background-color:#367db3; padding:4px;}
+#nav a {text-decoration:none; color:#fff; font-weight:bold;};
+#fname { margin:10px; color:#c60; font-size:13pt;}
+
+a.top_banner {float:right; color:#fff; font-size:10px; text-decoration:none;
+        margin-top:8px; margin-right:10px;font-family:arial;}
+#erc_report_banner  {background-color:#367DB3; padding:0px; margin:0px; width:100%;}
+#trail {margin:0px;  border-top:1px #fff solid; width:100%;
+height:17px; background-color:#367db3; color:#fff;}
+#trail a {color:#fff; font-size:10px; text-decoration:none;font-family:arial;}
+
+
+#main {margin:20px;font-family:verdana,arial; font-size:9pt; color:#333; }
+#main a {text-decoration:none;}
+#main table {width:900px; border-collapse:collapse; background-color:#999;
+ 	border:1px #999 solid; cellpadding:2px;}
+#main th {background-color:#dedede; border:1px #999 solid; padding:3px; font-size:10pt;}
+#main td {background-color:#fff;border:1px #999 solid; vertical-align:top;
+ 	padding:3px;}
+ 	
+#user_info {margin:20px 10px 10px 10px; background-color:#ddd; padding:10px;
+        border:1px #ccc solid; width:100%;}
+#form_dms {margin:10px; padding:10px; border:1px #c00 solid;
+        width:100%;}
+#form_dms td.right {text-align:right;}
+#button_dms { width:50px; margin:5px; padding:5px;
+        background-color:#c00; text-align:center; font-size:9pt;}
+#button_dms a{ text-decoration:none; color:#fff;}
+span.accent {font-size:17px; font-weight:bold;}
+
+.section {background-color:	#dedede; padding:2px; font-size:8pt; 
+	font-weight:bold; margin-top:15px; margin-bottom:15px;}	
+.section_orange {background-color:	#fc7; padding:2px 2px 2px 10px; font-size:8pt; 
+	font-weight:bold; margin-top:15px; margin-bottom:15px;}	
+.section_line { border-bottom:1px #999 solid; margin-top:15px; margin-bottom:15px; }
+
+h1 {color:#e66600;}
+a {font-size:7px;}
+	
+b.red {color:#c00;}
+td h2, h2.blue {font-family:Helvetica, Arial, Verdana; color:#1d6396}
+#form {margin:20px;  font-family:verdana,arial; color:#333; font-size:8pt}
+#form td.tag {text-align:right; font-weight:bold;}
+#form td.tag_norm {text-align:right; font-weight:normal;}
+#form td.user_info {text-align:left; width:200px;}
+#form td {vertical-align:top; padding:5px; font-size:8pt;}
+#form td.list {vertical-align:top; padding:2px; font-size:8pt;}
+#form td.note {color:#c00;}
+#form td.today {width:300px;}
+#form tr.grey, #form td.grey {background-color:#eee;font-size:8pt;}
+#form span.grey {color:#666; font-size:7pt; font-weight:normal;}
+#form td.formQuestion {	min-width:220px; max-width:500px; text-align:right;	font-weight:normal; }
+#form td.formAnswer { min-width:500px; }
+#form table.full {width:100%;}
+
+
+#form table.box {width:900px; border-collapse:collapse; background-color:#999;
+ 	border:1px #999 solid; cellpadding:2px; margin-top:5px;font-size:8pt;}
+#form th.box {background-color:#dedede; border:1px #999 solid; padding:3px; font-size:8pt;}
+#form th.box_plain {background-color:#dedede; border:1px #999 solid; padding:3px; font-size:8pt;
+	font-weight:normal;}
+#form td.box {background-color:#fff;border:1px #999 solid; vertical-align:top;
+ 	padding:10px;}
+#form td.box_center {background-color:#fff;border:1px #999 solid; vertical-align:top;
+ 	text-align:center; padding:10px;}
+ 	
+#form a { text-decoration:none;}
+#form a.sm {font-size:7pt;}
+
+#desc { border:1px #ccc solid; background-color:#efefef; padding:5px; width:470px; margin-top:10px;
+	margin-bottom:5px; font-size:7pt; }
+#desc_wide { border:1px #ccc solid; background-color:#efefef; padding:5px; margin-top:10px;
+	margin-bottom:5px; font-size:7pt; }
+#desc ul li {margin:0px;}
+#desc a {font-size:7pt;}
+
+#top_logo {margin:0px 5px 30px 5x; padding-top:5px;padding-bottom:5px; border-bottom:1px #999 dotted;}
+#top_banner {margin:0px; width:100%; background-color:#369; border:1px #367 solid;}
+#g2g {border:1px #ccc solid; background-color:#efefef; padding:10px; margin-bottom:20px; font-weight:bold;
+	width:500px; vertical-align:middle;}
+#buttons {margin-top:30px; padding:10px; border-top:1px #999 dotted;}
+#buttons  ul {
+        margin-left: 0;
+        padding-left: 0;
+        padding-bottom: 4px;
+        display: inline;
+        }
+
+#buttons ul li {
+        margin-left: 5px;
+        margin-bottom: 0;
+        padding: 2px 5px 4px 5px;
+        border: 1px solid #999;
+        list-style: none;
+        display: inline;
+        background-color:#999;
+        font-size:7pt;
+        color:#fff;
+        width:100px;
+        text-align:center;
+        }
+#buttons ul li a:link, #buttons ul li a:visited {text-decoration:none; color:#fff;}
+#buttons ul li a:hover {text-decoration:none; color:#2766a5;}
+
+#recipient { display:none; margin-top:10px; font-size:10px; }
+
+#gne_return {margin-left:20px;  font-size:10pt;}
+
+#gne_footer {margin:50px 5px 0px 0px; width:100%; height:7px;
+	padding-top:10px; padding-bottom:10px; 
+	background-color:#999;
+	text-align:right;}
+#gne_footer img {float:right;margin-right:20px; }
+#gne_footer a {color:#fff; text-decoration:none;}
+
+#dms_footer {margin:20px 15px 20px 15px; font-size:9px;  border-top:1px #999 dotted;}
+#dms_footer a {font-size:9px;}
+
+#agreement {float:right; width:275px; border:1px #c00 solid; margin:10px; padding:5px; }
+#agreement h3 {border-bottom:1px #333 dotted;}
+
+#agreement ul li,  #agreement ol li { font-size:9px; margin-left:0px;}
+#agreement a { font-size:9px; }
+
+#guidelines { border:1px #E66600 solid; margin:10px; padding:0px 5px 0px 5px; }
+#guidelines .note {color:#E66600;}
+#guidelines ul {margin-top:3px; }
+#guidelines ul li { font-size:9px; margin-left:0px;}
+#guidelines a { font-size:9px; }
+
+#vconference_info, #recurring_event, #other_employee, #lab_request,#hardware_info, #software_info, #printer_info, 
+	#report_level, #qacc_request_recipe, #qacc_request_mm, #qacc_request_both, #expedite_explain, 
+	#backup_other, #backup_ip, #fieldsOther, #locationOther, #categoryAffectedOther, 
+	#plantsOther, #GMPSelected, #designChange, #impact {
+	display:none; margin-top:10px; font-size:10px; border:1px #ccc solid; 
+	background-color:#eee; padding:7px;}
+#categoryAffectedOther, #plantsOther {display:none; 
+	background-color:#eee;}
+.other-box {display:none; margin-top:10px; font-size:10px; border:1px #ccc solid; 
+	 padding:7px;}
+#fcount, #pcount {display:none; width:150px; font-size:10px;  
+	 margin-top:0px; padding:0px; text-align:left; vertical-align:middle;}
+
+#resources {float:right; width:350px; border:1px #ccc solid; margin:5px; padding:0px; font-size:9px; }
+
+#gne_simple_footer {margin: 0px; width:100%; height:10px;
+	padding-top:10px; padding-bottom:10px; 
+	background-color:#999;
+	text-align:right;}
+#gne_simple_footer img {margin-right:10px;}
+
+#errors li { color: #c00; }
+
+tr.odd{
+	    background-color: #6360ffd2;
+}
+
+tr.even{
+	    background-color: #495cc9bd;
+}

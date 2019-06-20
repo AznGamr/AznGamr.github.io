@@ -1,0 +1,43 @@
+function showHideInternet(obj){
+	if(obj.checked==true&&obj.value=='Internet'){
+		$('#internetDetails').show();
+		$('#phoneDetails').hide();
+	}else if(obj.checked==true){
+		$('#internetDetails').hide();
+	}
+	else if(obj.checked==false){
+		$('#internetDetails').hide();
+	}
+}
+function showHideDeskPhone(obj){
+	if(obj.checked==true&&obj.value=='Desk Phone'){
+		$('#phoneDetails').show();
+		$('#internetDetails').hide();
+	}else if(obj.checked==true){
+		$('#phoneDetails').hide();
+	}
+	else if(obj.checked==false){
+		$('#phoneDetails').hide();
+	}
+}
+function checkComputerOthers(target){//internet.ssids
+	//"internet.computer"
+	var $radios=$('input:radio[name="'+target+'"]');
+	
+        $radios.filter('[value=Other]').prop('checked', true);
+    
+}
+
+function resetSelections(obj){
+	var selections=$('.cBox');
+
+	for (var i = 0; i < selections.length; i++) {
+		if(selections[i].id!=obj.id){
+			selections[i].checked = false;
+		}
+	}
+
+	//hides('anotherLearningPlan.beforeSubmitting');
+}
+
+

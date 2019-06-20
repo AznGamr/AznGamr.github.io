@@ -1,0 +1,200 @@
+@media only screen and (max-device-width: 380px) {
+	body {
+		font-size: 32px !important;
+		width: 390px;
+	}
+	input[type="radio"], input[type="checkbox"] {
+		width: 36px;
+		height: 36px;
+	}
+	.ui-timepicker-list,.ui-timepicker-list li {
+		font-size: 20px !important;
+	}
+	.nwe-request {
+		width: 370px;
+	}
+	.nwe-request td {
+		vertical-align: middle;
+	}
+	div#form {
+		width: 385px;
+		float: left;
+		display: block;
+		font-size: 20px;
+		margin: 10px;
+	}
+	#top_logo img {
+		width: 385px;
+	}
+	.nwe-request td:nth-child(1) {
+		width: 175px !important;
+		max-width: 175px !important;
+	}
+	.nwe-request td:nth-child(2) {
+		width: 200px !important;
+		max-width: 200px !important;
+	}
+	.nwe-request td, #form td {
+		font-size: 20px !important;
+		vertical-align: middle;
+	}
+	input[type="button"], input[type="submit"], input[type="file"], button {
+		font-size: 32px !important;
+		width: 100%;
+		height: 52px;
+		vertical-align: middle;
+		font-weight: bolder;
+		margin-bottom: 10px;
+	}
+	h2 {
+		font-size: 32px !important;
+		width: 370px !important;
+		font-family: Verdana, Arial, Helvetica, sans-serif;
+		line-height: normal !important;
+		font-weight: bold !important;
+		color: #CC6600 !important;
+	}
+	label {
+		font-size: 22px;
+		/* white-space: nowrap; */
+		word-break: break-word;
+		max-width: 151px;
+		/* text-overflow: ellipsis; */
+		/* display: inline-block !important; */
+	}
+	td textarea, td input[type="text"] {
+		width: 99%;
+	}
+	#errors {
+		max-width: 370px;
+	}
+	#errors li {
+		font-size: 20px !important;
+	}
+	#dateStart, #dateEnd {
+		width: 179px;
+	}
+	#form a{
+		font-size: 20px;
+	}
+	#form p{
+		font-size:18px;
+	}
+	td.grey, td.grey li{
+		font-size:14px !important;
+	}
+}
+
+@media only screen and (min-width: 380px) and (max-device-width: 780px)
+	{
+	body {
+		font-size: 38px !important;
+		width: 690px;
+	}
+	input[type="radio"], input[type="checkbox"] {
+		width: 36px;
+		height: 36px;
+		vertical-align: middle;
+	}
+	.ui-timepicker-list,.ui-timepicker-list li {
+		font-size: 30px !important;
+	}
+	.nwe-request {
+		width: 675px;
+	}
+	div#form {
+		width: 680px;
+		font-size: 30px !important;
+	}
+	.nwe-request td:nth-child(1) {
+		width: 47% !important;
+		max-width: 270px !important;
+	}
+	.nwe-request td:nth-child(2) {
+		width: 47% !important;
+		max-width: 310px !important;
+	}
+	.nwe-request td {
+		font-size: 36px !important;
+		vertical-align: middle !important;
+	}
+	input[type="button"], input[type="submit"] {
+		font-size: 36px !important;
+		width: 685px;
+		height: 52px;
+		vertical-align: middle;
+		font-weight: bolder;
+		margin-bottom: 10px;
+	}
+	input[type="file"], button {
+		font-size: 34px !important;
+		width: 600px;
+		height: 48px;
+		vertical-align: middle;
+		font-weight: bolder;
+		margin-bottom: 10px;
+	}
+	h2 {
+		font-size: 40px !important;
+		width: 670px !important;
+		line-height: normal !important;
+		font-weight: bold !important;
+		color: #CC6600 !important;
+	}
+	label {
+		font-size: 38px;
+		word-break: break-word;
+		max-width: 283px;
+	}
+	td textarea, td input[type="text"] {
+		width: 99%;
+	}
+	#top_logo img {
+		width: 675px;
+	}
+	#errors {
+		max-width: 670px;
+	}
+	#errors li {
+		font-size: 22px !important;
+	}
+	#dateStart, #dateEnd {
+		width: 320px;
+	}
+	#form a{
+		font-size: 30px;
+	}
+	#form p{
+		font-size:26px;
+	}
+	td.grey, td.grey li{
+		font-size:18px !important;
+	}
+}
+
+@media ( min-width : 780px) {
+	.nwe-request {
+		width: 1070px;
+	}
+	.nwe-request td {
+		vertical-align: middle;
+	}
+	div#form {
+		width: 1085px;
+		float: left;
+		display: block;
+		margin: 10px;
+	}
+	.nwe-request td:nth-child(1) {
+		width: 475px !important;
+		max-width: 475px !important;
+	}
+	.nwe-request td:nth-child(2) {
+		width: 600px !important;
+		max-width: 600px !important;
+	}
+	.nwe-request td, #form td {
+		font-size: 14px !important;
+		vertical-align: middle;
+	}
+}
